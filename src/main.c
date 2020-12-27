@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
 #include "include/language_layer.h"
 
 #define GAME_TITLE "Game Title"
+#define GAME_WIDTH 512
+#define GAME_HEIGHT 288
 
 typedef struct BUFFER_STRUCT {
   SDL_Window* window;
@@ -46,7 +49,7 @@ initialize_player(buffer_t* buffer)
 internal void
 player_render(player_t* player, buffer_t* buffer)
 {
-  SDL_Rect rect = { player->x, player->y, 32, 32 };
+  SDL_Rect rect = { player->x, player->y, 16, 16 };
   SDL_RenderCopy(buffer->renderer, player->texture, NULL, &rect);
 }
 
@@ -66,7 +69,7 @@ render_buffer_to_screen(buffer_t* buffer)
 int main(int argc, char* argv[])
 {
   
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0)
   {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                              "Error",
@@ -74,12 +77,25 @@ int main(int argc, char* argv[])
                               NULL);
     goto Exit;
   }
+  
+  /* Get Screen Size */
+
+  SDL_DisplayMode display_mode_info;
+
+  if (SDL_GetDesktopDisplayMode(0, &display_mode_info) != 0)
+  {
+   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                             "Error",
+                             "Failed to get displaymode.",
+                             NULL);
+    goto Exit;
+  }
 
   global_buffer.window = SDL_CreateWindow(GAME_TITLE, 
                                           SDL_WINDOWPOS_UNDEFINED, 
                                           SDL_WINDOWPOS_UNDEFINED,
-                                          800,
-                                          600,
+                                          display_mode_info.w,
+                                          display_mode_info.h,
                                           SDL_WINDOW_SHOWN);
  
   if (!global_buffer.window) 
@@ -95,6 +111,22 @@ int main(int argc, char* argv[])
                                               -1,  // GPU thingy
                                                SDL_RENDERER_ACCELERATED 
                                                | SDL_RENDERER_PRESENTVSYNC); // Flags
+
+  // Set logical render -- basically set buffer render res
+  if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
+  {
+    printf("Failed to set logical game res.\n");
+    goto Exit;
+  }
+
+  if (SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN) != 0)
+  {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                             "Error",
+                             "Failed to set window fullscreen.",
+                             NULL);
+    goto Exit;
+  }
 
   if (!initialize_player(&global_buffer))
   {
