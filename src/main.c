@@ -25,6 +25,7 @@ typedef struct PLAYER_STRUCT {
 global_variable buffer_t global_buffer;
 global_variable player_t global_player;
 global_variable u64 global_total_rendered_frames;
+global_variable bool global_is_fullscreen;
 
 internal bool 
 initialize_player(buffer_t* buffer)
@@ -66,6 +67,68 @@ render_buffer_to_screen(buffer_t* buffer)
   SDL_RenderPresent(buffer->renderer);
 }
 
+internal SDL_DisplayMode 
+get_screen_info(void)
+{
+  SDL_DisplayMode result = { 0 };
+
+  if (SDL_GetDesktopDisplayMode(0, &result) != 0)
+  {
+   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                             "Error",
+                             "Failed to get displaymode.",
+                             NULL);
+  }
+  
+  return result;
+}
+
+internal int
+set_fullscreen(void)
+{
+  int result = SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN);
+
+  if (result != 0)
+  {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                             "Error",
+                             "Failed to set window fullscreen.",
+                             NULL);
+  }
+
+  return result;
+}
+
+internal void
+process_events(SDL_Event* event)
+{
+  switch (event->type)
+  {
+    case SDL_KEYDOWN: {
+      switch (event->key.keysym.sym)
+      {
+        case SDLK_F11: {
+          
+          if (global_is_fullscreen)
+          {
+            SDL_DisplayMode dm = get_screen_info();
+            SDL_RestoreWindow(global_buffer.window); //Incase it's maximized...
+            SDL_SetWindowSize(global_buffer.window, dm.w, dm.h + 10);
+            SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+            global_is_fullscreen = false;
+          }
+    
+          if (!global_is_fullscreen)
+          {
+            set_fullscreen();
+          }
+
+        } break;
+      }
+    } break;
+  }
+}
+
 int main(int argc, char* argv[])
 {
   
@@ -79,17 +142,7 @@ int main(int argc, char* argv[])
   }
   
   /* Get Screen Size */
-
-  SDL_DisplayMode display_mode_info;
-
-  if (SDL_GetDesktopDisplayMode(0, &display_mode_info) != 0)
-  {
-   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                             "Error",
-                             "Failed to get displaymode.",
-                             NULL);
-    goto Exit;
-  }
+  SDL_DisplayMode display_mode_info = get_screen_info();
 
   global_buffer.window = SDL_CreateWindow(GAME_TITLE, 
                                           SDL_WINDOWPOS_UNDEFINED, 
@@ -118,15 +171,10 @@ int main(int argc, char* argv[])
     printf("Failed to set logical game res.\n");
     goto Exit;
   }
+  
+  global_is_fullscreen = true;
 
-  if (SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN) != 0)
-  {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                             "Error",
-                             "Failed to set window fullscreen.",
-                             NULL);
-    goto Exit;
-  }
+  set_fullscreen();
 
   if (!initialize_player(&global_buffer))
   {
@@ -146,6 +194,8 @@ int main(int argc, char* argv[])
     {
       if (event.type == SDL_QUIT)
         running = false;
+
+      process_events(&event);
     }
 
     /* Main Game Simulation */
