@@ -86,6 +86,10 @@ get_screen_info(void)
 internal int
 set_fullscreen(void)
 {
+  SDL_DisplayMode info = get_screen_info();
+
+  SDL_SetWindowSize(global_buffer.window, info.w, info.h);
+
   int result = SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN);
 
   if (result != 0)
@@ -108,21 +112,27 @@ process_events(SDL_Event* event)
       switch (event->key.keysym.sym)
       {
         case SDLK_F11: {
-          
+
           if (global_is_fullscreen)
           {
             SDL_DisplayMode dm = get_screen_info();
             SDL_RestoreWindow(global_buffer.window); //Incase it's maximized...
-            SDL_SetWindowSize(global_buffer.window, dm.w, dm.h + 10);
+
+            if (SDL_SetWindowFullscreen(global_buffer.window, 0) != 0)
+            {
+              printf("Failed to set windowed\n");
+            }
+
+            SDL_SetWindowSize(global_buffer.window, dm.w - 10, dm.h - 10);
             SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             global_is_fullscreen = false;
           }
-    
-          if (!global_is_fullscreen)
+          else
           {
             set_fullscreen();
+            global_is_fullscreen = true;
           }
-
+        
         } break;
       }
     } break;
@@ -149,7 +159,7 @@ int main(int argc, char* argv[])
                                           SDL_WINDOWPOS_UNDEFINED,
                                           display_mode_info.w,
                                           display_mode_info.h,
-                                          SDL_WINDOW_SHOWN);
+                                          SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
  
   if (!global_buffer.window) 
   {
