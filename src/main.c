@@ -16,9 +16,27 @@ typedef struct BUFFER_STRUCT {
   SDL_Renderer* renderer;
 } buffer_t;
 
+typedef struct CONTROLLER_STRUCT {
+  bool up;
+  bool down;
+  bool left;
+  bool right;
+  bool start;
+  bool back;
+  bool left_shoulder;
+  bool right_shoulder;
+  bool a_button;
+  bool b_button;
+  bool x_button;
+  bool y_button;
+  i16 stick_x;
+  i16 stick_y;
+} controller_t;
+
 typedef struct PLAYER_STRUCT {
   u32 x, y;
   u32 health;
+  f32 speed;
   SDL_Texture* texture;
 } player_t;
 
@@ -26,6 +44,55 @@ global_variable buffer_t global_buffer;
 global_variable player_t global_player;
 global_variable u64 global_total_rendered_frames;
 global_variable bool global_is_fullscreen;
+
+//Analog joystick dead zone
+global_variable const int JOYSTICK_DEAD_ZONE = 8000;
+//Game Controller 1 handler
+global_variable SDL_GameController* global_game_controller;
+
+internal void 
+initialize_controller(void)
+{
+  if(global_game_controller && SDL_GameControllerGetAttached(global_game_controller))
+  {
+    controller_t gamepad;
+    gamepad.up = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_DPAD_UP);
+    gamepad.down = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+    gamepad.left = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+    gamepad.right = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+    gamepad.start = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_START);
+    gamepad.back = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_BACK);
+    gamepad.left_shoulder = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+    gamepad.right_shoulder = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+    gamepad.a_button = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_A);
+    gamepad.b_button = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_B);
+    gamepad.x_button = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_X);
+    gamepad.y_button = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_BUTTON_Y);
+
+    gamepad.stick_x = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_AXIS_LEFTX);
+    gamepad.stick_y = SDL_GameControllerGetButton(global_game_controller, 
+                                             SDL_CONTROLLER_AXIS_LEFTY);
+
+
+  }
+  else
+  {
+    printf( "Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError() );
+  }
+}
 
 internal bool 
 initialize_player(buffer_t* buffer)
@@ -137,6 +204,7 @@ process_events(SDL_Event* event)
       }
     } break;
   }
+
 }
 
 int main(int argc, char* argv[])
@@ -186,6 +254,8 @@ int main(int argc, char* argv[])
 
   set_fullscreen();
 
+  initialize_controller();
+  
   if (!initialize_player(&global_buffer))
   {
     printf("Failed to initalize player!\n");
@@ -219,6 +289,8 @@ int main(int argc, char* argv[])
   
 
 Exit:
+  //Close game controller
+  SDL_GameControllerClose(global_game_controller);
   SDL_DestroyTexture(global_player.texture);
   SDL_DestroyRenderer(global_buffer.renderer);
   SDL_DestroyWindow(global_buffer.window);
