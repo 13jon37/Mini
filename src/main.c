@@ -34,7 +34,7 @@ typedef struct CONTROLLER_STRUCT {
 } controller_t;
 
 typedef struct PLAYER_STRUCT {
-    f32 x, y;
+    u32 x, y;
     u32 health;
     f32 speed;
     SDL_Texture* texture;
@@ -89,27 +89,8 @@ poll_input(void)
         printf( "Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError() );
     }
     
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    
-    if (state[SDL_SCANCODE_W])
-    {
-        global_player.y--;
-    }
-    
-    if (state[SDL_SCANCODE_A])
-    {
-        global_player.x--;
-    }
-    
-    if (state[SDL_SCANCODE_S])
-    {
-        global_player.y++;
-    }
-    
-    if (state[SDL_SCANCODE_D])
-    {
+    if (gamepad.a_)
         global_player.x++;
-    }
 }
 
 internal bool 
@@ -118,7 +99,6 @@ initialize_player(buffer_t* buffer)
     global_player.x = 25;
     global_player.y = 25;
     global_player.health = 100;
-    global_player.speed = 5.f;
     
     SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
     global_player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -205,14 +185,12 @@ process_events(SDL_Event* event)
                         SDL_DisplayMode dm = get_screen_info();
                         SDL_RestoreWindow(global_buffer.window); //Incase it's maximized...
                         
-                        SDL_Delay(500);
-                        
                         if (SDL_SetWindowFullscreen(global_buffer.window, 0) != 0)
                         {
                             printf("Failed to set windowed\n");
                         }
-                        
-                        SDL_SetWindowSize(global_buffer.window, dm.w - 80, dm.h - 80);
+                        SDL_Delay(500);
+                        SDL_SetWindowSize(global_buffer.window, dm.w - 10, dm.h - 10);
                         SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                         global_is_fullscreen = false;
                     }
@@ -264,7 +242,8 @@ int main(int argc, char* argv[])
     
     global_buffer.renderer = SDL_CreateRenderer(global_buffer.window, 
                                                 -1,  // GPU thingy
-                                                SDL_RENDERER_ACCELERATED); // Flags
+                                                SDL_RENDERER_ACCELERATED 
+                                                | SDL_RENDERER_PRESENTVSYNC); // Flags
     
     // Set logical render -- basically set buffer render res
     if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
@@ -287,40 +266,32 @@ int main(int argc, char* argv[])
     
     SDL_Event event;
     
-    boolm running = true;
-    
-    i32 target_fps = 60;
-    i32 desired_delta = 1000 / target_fps; // Time wanted between each frame
+    bool running = true;
     
     /* Main Game Loop */
     while (running)
     {
-        int start_counter = SDL_GetTicks();
-        
         /* Event Loop */
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
                 running = false;
+            
+            process_events(&event);
         }
         
         /* Main Game Simulation */
         {
-            process_events(&event);
             render_buffer_to_screen(&global_buffer); 
+            
         }
         
         global_total_rendered_frames++;
-        
-        i32 delta = SDL_GetTicks() - start_counter;
-        if (delta < desired_delta)
-        {
-            SDL_Delay(desired_delta - delta);
-        }
     }
     
     
     Exit:
+    //Close game controller
     SDL_GameControllerClose(global_game_controller);
     SDL_DestroyTexture(global_player.texture);
     SDL_DestroyRenderer(global_buffer.renderer);
