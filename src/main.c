@@ -38,6 +38,7 @@ typedef struct PLAYER_STRUCT {
     u32 x, y;
     u32 health;
     f32 speed;
+    bool moving;
     SDL_Texture* texture;
 } player_t;
 
@@ -184,7 +185,7 @@ render_fps_text(game_t* game, buffer_t* buffer, f32 fps)
     
     char fps_buf[12];
     
-    gcvt(fps, 6, fps_buf);
+    gcvt(fps, 2, fps_buf);
     
     SDL_Surface* surface = TTF_RenderText_Solid(game->font, fps_buf, Red);
     game->fps_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -381,10 +382,10 @@ int main(int argc, char* argv[])
     SDL_Event event;
     bool running = true;
     
-    i32 target_fps = 60;
-    i32 desired_delta= 1000 / target_fps;
+    f32 target_fps = 60.0f;
+    f32 desired_delta= 1000.0 / target_fps;
     
-    global_delta = 0;
+    global_delta = 0.f;
     
     /* Main Game Loop */
     while (running)
@@ -404,14 +405,14 @@ int main(int argc, char* argv[])
         }
         
         global_total_rendered_frames++;
-        i32 delta = SDL_GetTicks() - start_counter;
+        f32 delta = SDL_GetTicks() - start_counter;
         if (delta < desired_delta)
         {
             SDL_Delay(desired_delta - delta);
         }
         
         // Convert m/s to fps
-        global_delta = 1000 / (desired_delta - delta);
+        global_delta = 1000.0 / (f32)(desired_delta - delta);
     }
     
     
