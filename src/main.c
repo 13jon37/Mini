@@ -40,8 +40,18 @@ typedef struct PLAYER_STRUCT {
     SDL_Texture* texture;
 } player_t;
 
+typedef struct TILE_STRUCT {
+    u32 x, y;
+    SDL_Texture* texture;
+} tile_t;
+
+typedef struct GAME_STRUCT {
+    tile_t tiles;
+    player_t player;
+} game_t;
+
 global_variable buffer_t global_buffer;
-global_variable player_t global_player;
+global_variable game_t global_game;
 global_variable u64 global_total_rendered_frames;
 global_variable bool global_is_fullscreen;
 
@@ -86,45 +96,76 @@ poll_input(void)
     }
     else
     {
-        printf( "Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError() );
+        printf("Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError());
     }
+    
+    /* Player Movement Code */
     
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     
-    if(state[SDL_SCANCODE_W])
+    if(state[SDL_SCANCODE_W] | gamepad.up)
     {
-        global_player.y--;
+        global_game.player.y--;
     }
     
-    if(state[SDL_SCANCODE_A])
+    if(state[SDL_SCANCODE_A] | gamepad.left)
     {
-        global_player.x--;
+        global_game.player.x--;
     }
     
-    if(state[SDL_SCANCODE_S])
+    if(state[SDL_SCANCODE_S] | gamepad.down)
     {
-        global_player.y++;
+        global_game.player.y++;
     }
     
-    if(state[SDL_SCANCODE_D])
+    if(state[SDL_SCANCODE_D] | gamepad.right)
     {
-        global_player.x++;
+        global_game.player.x++;
     }
     
 }
 
 internal bool 
-initialize_player(buffer_t* buffer)
+load_tiles(buffer_t* buffer, game_t* game)
 {
-    global_player.x = 25;
-    global_player.y = 25;
-    global_player.health = 100;
-    
-    SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
-    global_player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    SDL_Surface* surface = IMG_Load("Assets/grass.png");
+    game->tiles.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
-    if (!global_player.texture)
+    if (!game->tiles.texture)
+    {
+        printf("Failed to load tile texture.\n");
+        return false;
+    }
+    
+    return true;
+}
+
+internal void
+render_tiles(game_t* game, buffer_t* buffer)
+{
+    for (i32 y = 0; y < GAME_HEIGHT; y+=16)
+    {
+        for (i32 x = 0; x < GAME_WIDTH; x+=16)
+        {
+            SDL_Rect rect = { x, y, 16, 16 };
+            SDL_RenderCopy(buffer->renderer, game->tiles.texture, NULL, &rect);
+        }
+    }
+}
+
+internal bool 
+initialize_player(buffer_t* buffer)
+{
+    global_game.player.x = 25;
+    global_game.player.y = 25;
+    global_game.player.health = 100;
+    
+    SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
+    global_game.player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    SDL_FreeSurface(surface);
+    
+    if (!global_game.player.texture)
     {
         printf("Failed to load player bmp.\n");
         return false;
@@ -134,21 +175,23 @@ initialize_player(buffer_t* buffer)
 }
 
 internal void
-player_render(player_t* player, buffer_t* buffer)
+player_render(game_t* game, buffer_t* buffer)
 {
-    SDL_Rect rect = { player->x, player->y, 16, 16 };
-    SDL_RenderCopy(buffer->renderer, player->texture, NULL, &rect);
+    SDL_Rect rect = { game->player.x, game->player.y, 16, 16 };
+    SDL_RenderCopy(buffer->renderer, game->player.texture, NULL, &rect);
 }
 
 internal void
-render_buffer_to_screen(buffer_t* buffer)
+render_buffer_to_screen(buffer_t* buffer, game_t* game)
 {
     SDL_RenderClear(buffer->renderer);
     
     // Insert Objects to Render
     SDL_SetRenderDrawColor(buffer->renderer, 0, 0, 0, 255);
     
-    player_render(&global_player, buffer);
+    render_tiles(game, buffer);
+    
+    player_render(&global_game, buffer);
     
     SDL_RenderPresent(buffer->renderer);
 }
@@ -278,6 +321,9 @@ int main(int argc, char* argv[])
     
     initialize_controller();
     
+    if (!load_tiles(&global_buffer, &global_game))
+        goto Exit;
+    
     if (!initialize_player(&global_buffer))
     {
         printf("Failed to initalize player!\n");
@@ -304,7 +350,7 @@ int main(int argc, char* argv[])
         /* Main Game Simulation */
         {
             process_events(&event);
-            render_buffer_to_screen(&global_buffer); 
+            render_buffer_to_screen(&global_buffer, &global_game); 
         }
         
         global_total_rendered_frames++;
@@ -318,7 +364,8 @@ int main(int argc, char* argv[])
     
     Exit:
     SDL_GameControllerClose(global_game_controller);
-    SDL_DestroyTexture(global_player.texture);
+    SDL_DestroyTexture(global_game.tiles.texture);
+    SDL_DestroyTexture(global_game.player.texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
     SDL_Quit();
