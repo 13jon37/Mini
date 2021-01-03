@@ -1,8 +1,0 @@
-{
-  "project": "easymake",
-  "compiler": "gcc",
-  "output": "game",
-  "includes": ["include"],
-  "sources": ["src/main.c"],
-  "compiler_options": ["-g", "-Wall", "-lSDL2", "-lSDL2_image", "-ludev"]
-}
