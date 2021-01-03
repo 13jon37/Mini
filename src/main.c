@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "include/language_layer.h"
 
@@ -48,12 +49,15 @@ typedef struct TILE_STRUCT {
 typedef struct GAME_STRUCT {
     tile_t tiles;
     player_t player;
+    TTF_Font* font;
+    SDL_Texture* fps_texture;
 } game_t;
 
 global_variable buffer_t global_buffer;
 global_variable game_t global_game;
 global_variable u64 global_total_rendered_frames;
 global_variable bool global_is_fullscreen;
+global_variable f32 global_delta;
 
 global_variable SDL_GameController* global_game_controller;
 
@@ -154,6 +158,45 @@ render_tiles(game_t* game, buffer_t* buffer)
     }
 }
 
+internal bool
+load_fonts(game_t* game)
+{
+    if (TTF_Init() == -1) {
+        printf("Failed to init TTF.\n");
+        return false;
+    }
+    
+    game->font = TTF_OpenFont("Assets/liberation-mono.ttf", 12);
+    
+    if (!game->font)
+    {
+        printf("Failed to load fonts.\n");
+        return false;
+    }
+    
+    return true;
+}
+
+internal void
+render_fps_text(game_t* game, buffer_t* buffer, f32 fps)
+{
+    SDL_Color Red = { 255, 0, 0, 0 };
+    
+    char fps_buf[12];
+    
+    gcvt(fps, 6, fps_buf);
+    
+    SDL_Surface* surface = TTF_RenderText_Solid(game->font, fps_buf, Red);
+    game->fps_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    SDL_FreeSurface(surface);
+    
+    SDL_Rect rect = { 5, 0, 10, 10};
+    SDL_RenderCopy(buffer->renderer, game->fps_texture, NULL, &rect);
+    
+    SDL_DestroyTexture(game->fps_texture);
+}
+
+
 internal bool 
 initialize_player(buffer_t* buffer)
 {
@@ -182,7 +225,7 @@ player_render(game_t* game, buffer_t* buffer)
 }
 
 internal void
-render_buffer_to_screen(buffer_t* buffer, game_t* game)
+render_buffer_to_screen(game_t* game, buffer_t* buffer)
 {
     SDL_RenderClear(buffer->renderer);
     
@@ -191,7 +234,9 @@ render_buffer_to_screen(buffer_t* buffer, game_t* game)
     
     render_tiles(game, buffer);
     
-    player_render(&global_game, buffer);
+    player_render(game, buffer);
+    
+    render_fps_text(game, buffer, global_delta);
     
     SDL_RenderPresent(buffer->renderer);
 }
@@ -324,6 +369,9 @@ int main(int argc, char* argv[])
     if (!load_tiles(&global_buffer, &global_game))
         goto Exit;
     
+    if (!load_fonts(&global_game))
+        goto Exit;
+    
     if (!initialize_player(&global_buffer))
     {
         printf("Failed to initalize player!\n");
@@ -335,6 +383,8 @@ int main(int argc, char* argv[])
     
     i32 target_fps = 60;
     i32 desired_delta= 1000 / target_fps;
+    
+    global_delta = 0;
     
     /* Main Game Loop */
     while (running)
@@ -350,7 +400,7 @@ int main(int argc, char* argv[])
         /* Main Game Simulation */
         {
             process_events(&event);
-            render_buffer_to_screen(&global_buffer, &global_game); 
+            render_buffer_to_screen(&global_game, &global_buffer); 
         }
         
         global_total_rendered_frames++;
@@ -359,6 +409,9 @@ int main(int argc, char* argv[])
         {
             SDL_Delay(desired_delta - delta);
         }
+        
+        // Convert m/s to fps
+        global_delta = 1000 / (desired_delta - delta);
     }
     
     
@@ -368,6 +421,10 @@ int main(int argc, char* argv[])
     SDL_DestroyTexture(global_game.player.texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
+    
+    TTF_CloseFont(global_game.font);
+    TTF_Quit();
+    
     SDL_Quit();
     
     return 0; 
