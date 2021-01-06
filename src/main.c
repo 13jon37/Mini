@@ -271,35 +271,28 @@ get_screen_info(void)
     return result;
 }
 
-internal int
+internal void
 set_fullscreen(void)
 {
     SDL_DisplayMode info = get_screen_info();
     
     SDL_SetWindowSize(global_buffer.window, info.w, info.h);
     
-    int result = SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN);
-    
-    if (result != 0)
-    {
+    if (SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN) != 0) {
+        
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
                                  "Failed to set window fullscreen.",
                                  NULL);
     }
-    
-    return result;
 }
 
-internal int
+internal void
 set_windowed(void) 
 {
     SDL_DisplayMode info = get_screen_info();
     
-    int result = SDL_SetWindowFullscreen(global_buffer.window, 0);
-    
-    if (result != 0)
-    {
+    if (SDL_SetWindowFullscreen(global_buffer.window, 0) != 0) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
                                  "Failed to set screen to windowed mode.",
@@ -308,8 +301,6 @@ set_windowed(void)
     
     SDL_SetWindowSize(global_buffer.window, info.w - 80, info.h - 80);
     SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    
-    return result;
 }
 
 internal void
@@ -323,16 +314,10 @@ process_events(SDL_Event* event)
                 case SDLK_F11: {
                     
                     if (global_performance_data.is_fullscreen)
-                    {
                         set_windowed();
-                        global_performance_data.is_fullscreen = false;
-                    }
                     else
-                    {
                         set_fullscreen();
-                        global_performance_data.is_fullscreen = true;
-                    }
-                    
+                    global_performance_data.is_fullscreen = !global_performance_data.is_fullscreen;
                 } break;
             }
         } break;
@@ -382,8 +367,6 @@ int main(int argc, char* argv[])
         printf("Failed to set logical game res.\n");
         goto Exit;
     }
-    
-    global_performance_data.is_fullscreen = false;
     
     if (global_performance_data.is_fullscreen)
         set_fullscreen();
