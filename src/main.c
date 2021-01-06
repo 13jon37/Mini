@@ -48,19 +48,23 @@ typedef struct TILE_STRUCT {
     SDL_Texture* texture;
 } tile_t;
 
+typedef struct PERFORMANCE_DATA_STRUCT {
+    f32 frames_per_second;
+    u64 total_rendered_frames;
+    bool is_fullscreen;
+    TTF_Font* fps_font;
+    SDL_Texture* fps_texture;
+} performance_t;
+
 typedef struct GAME_STRUCT {
     tile_t tiles;
     player_t player;
-    TTF_Font* font;
-    SDL_Texture* fps_texture;
     controller_t gamepad;
 } game_t;
 
 global_variable buffer_t global_buffer;
 global_variable game_t global_game;
-global_variable u64 global_total_rendered_frames;
-global_variable bool global_is_fullscreen;
-global_variable f32 global_delta;
+global_variable performance_t global_performance_data;
 
 global_variable SDL_GameController* global_game_controller;
 
@@ -169,16 +173,16 @@ render_tiles(game_t* game, buffer_t* buffer)
 }
 
 internal bool
-load_fonts(game_t* game)
+load_fonts(performance_t* perf)
 {
     if (TTF_Init() == -1) {
         printf("Failed to init TTF.\n");
         return false;
     }
     
-    game->font = TTF_OpenFont("Assets/liberation-mono.ttf", 12);
+    perf->fps_font = TTF_OpenFont("Assets/liberation-mono.ttf", 12);
     
-    if (!game->font)
+    if (!perf->fps_font)
     {
         printf("Failed to load fonts.\n");
         return false;
@@ -188,7 +192,7 @@ load_fonts(game_t* game)
 }
 
 internal void
-render_fps_text(game_t* game, buffer_t* buffer, f32 fps)
+render_fps_text(performance_t* perf, buffer_t* buffer, f32 fps)
 {
     SDL_Color Red = { 255, 0, 0, 0 };
     
@@ -196,14 +200,14 @@ render_fps_text(game_t* game, buffer_t* buffer, f32 fps)
     
     gcvt(fps, 2, fps_buf);
     
-    SDL_Surface* surface = TTF_RenderText_Solid(game->font, fps_buf, Red);
-    game->fps_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    SDL_Surface* surface = TTF_RenderText_Solid(perf->fps_font, fps_buf, Red);
+    perf->fps_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
     SDL_Rect rect = { 5, 0, 10, 10};
-    SDL_RenderCopy(buffer->renderer, game->fps_texture, NULL, &rect);
+    SDL_RenderCopy(buffer->renderer, perf->fps_texture, NULL, &rect);
     
-    SDL_DestroyTexture(game->fps_texture);
+    SDL_DestroyTexture(perf->fps_texture);
 }
 
 
@@ -246,7 +250,7 @@ render_buffer_to_screen(game_t* game, buffer_t* buffer)
     
     player_render(game, buffer);
     
-    render_fps_text(game, buffer, global_delta);
+    render_fps_text(&global_performance_data, buffer, global_performance_data.frames_per_second);
     
     SDL_RenderPresent(buffer->renderer);
 }
@@ -318,15 +322,15 @@ process_events(SDL_Event* event)
             {
                 case SDLK_F11: {
                     
-                    if (global_is_fullscreen)
+                    if (global_performance_data.is_fullscreen)
                     {
                         set_windowed();
-                        global_is_fullscreen = false;
+                        global_performance_data.is_fullscreen = false;
                     }
                     else
                     {
                         set_fullscreen();
-                        global_is_fullscreen = true;
+                        global_performance_data.is_fullscreen = true;
                     }
                     
                 } break;
@@ -379,9 +383,9 @@ int main(int argc, char* argv[])
         goto Exit;
     }
     
-    global_is_fullscreen = false;
+    global_performance_data.is_fullscreen = false;
     
-    if (global_is_fullscreen)
+    if (global_performance_data.is_fullscreen)
         set_fullscreen();
     else
         set_windowed();
@@ -389,7 +393,7 @@ int main(int argc, char* argv[])
     if (!load_tiles(&global_buffer, &global_game))
         goto Exit;
     
-    if (!load_fonts(&global_game))
+    if (!load_fonts(&global_performance_data))
         goto Exit;
     
     if (!initialize_player(&global_buffer))
@@ -427,7 +431,7 @@ in order to use a controller */
             render_buffer_to_screen(&global_game, &global_buffer); 
         }
         
-        global_total_rendered_frames++;
+        global_performance_data.total_rendered_frames++;
         f32 delta = SDL_GetTicks() - start_counter;
         if (delta < desired_delta)
         {
@@ -435,7 +439,7 @@ in order to use a controller */
         }
         
         // Convert m/s to fps
-        global_delta = 1000.0 / (f32)(desired_delta - delta);
+        global_performance_data.frames_per_second = 1000.0 / (f32)(desired_delta - delta);
     }
     
     
@@ -446,7 +450,7 @@ in order to use a controller */
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
     
-    TTF_CloseFont(global_game.font);
+    TTF_CloseFont(global_performance_data.fps_font);
     TTF_Quit();
     
     SDL_Quit();
