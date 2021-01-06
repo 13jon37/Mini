@@ -32,6 +32,7 @@ typedef struct CONTROLLER_STRUCT {
     bool y_button;
     i16 stick_x;
     i16 stick_y;
+    bool controller_connected;
 } controller_t;
 
 typedef struct PLAYER_STRUCT {
@@ -52,6 +53,7 @@ typedef struct GAME_STRUCT {
     player_t player;
     TTF_Font* font;
     SDL_Texture* fps_texture;
+    controller_t gamepad;
 } game_t;
 
 global_variable buffer_t global_buffer;
@@ -63,13 +65,14 @@ global_variable f32 global_delta;
 global_variable SDL_GameController* global_game_controller;
 
 internal void
-initialize_controller(void) 
+initialize_controller(game_t* game) 
 {
     // Code copied straight from the documentation :)
     for (int i = 0; i < SDL_NumJoysticks(); ++i) {
         if (SDL_IsGameController(i)) {
             global_game_controller = SDL_GameControllerOpen(i);
             if (global_game_controller) {
+                game->gamepad.controller_connected = true;
                 break;
             } else {
                 fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
@@ -78,56 +81,62 @@ initialize_controller(void)
     }
 }
 
-internal void 
-poll_input(void)
+internal void
+controller_setup(game_t* game)
 {
-    controller_t gamepad;
-    if(SDL_GameControllerGetAttached(global_game_controller))
+    if (SDL_GameControllerGetAttached(global_game_controller))
     {
-        gamepad.up = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
-        gamepad.down = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-        gamepad.left = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-        gamepad.right = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-        gamepad.start = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_START);
-        gamepad.back = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_BACK);
-        gamepad.left_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
-        gamepad.right_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-        gamepad.a_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_A);
-        gamepad.b_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_B);
-        gamepad.x_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_X);
-        gamepad.y_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_Y);
-        gamepad.stick_x = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTX);
-        gamepad.stick_y = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTY);
+        game->gamepad.up = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
+        game->gamepad.down = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+        game->gamepad.left = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+        game->gamepad.right = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+        game->gamepad.start = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_START);
+        game->gamepad.back = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_BACK);
+        game->gamepad.left_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+        game->gamepad.right_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+        game->gamepad.a_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_A);
+        game->gamepad.b_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_B);
+        game->gamepad.x_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_X);
+        game->gamepad.y_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_Y);
+        game->gamepad.stick_x = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTX);
+        game->gamepad.stick_y = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTY);
     }
     else
     {
-        printf("Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError());
+        printf("Warning: Unable to open game controller or no controller plugged in! SDL Error: %s\n", SDL_GetError());
     }
+}
+
+internal void 
+poll_input(game_t* game)
+{
+    // If there is a controller connected set it up
+    if (game->gamepad.controller_connected)
+        controller_setup(game);
     
     /* Player Movement Code */
     
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     
-    if(state[SDL_SCANCODE_W] | gamepad.up)
+    if (state[SDL_SCANCODE_W] | game->gamepad.up)
     {
         global_game.player.y--;
     }
     
-    if(state[SDL_SCANCODE_A] | gamepad.left)
+    if (state[SDL_SCANCODE_A] |  game->gamepad.left)
     {
         global_game.player.x--;
     }
     
-    if(state[SDL_SCANCODE_S] | gamepad.down)
+    if (state[SDL_SCANCODE_S] | game->gamepad.down)
     {
         global_game.player.y++;
     }
     
-    if(state[SDL_SCANCODE_D] | gamepad.right)
+    if (state[SDL_SCANCODE_D] | game->gamepad.right)
     {
         global_game.player.x++;
     }
-    
 }
 
 internal bool 
@@ -278,6 +287,27 @@ set_fullscreen(void)
     return result;
 }
 
+internal int
+set_windowed(void) 
+{
+    SDL_DisplayMode info = get_screen_info();
+    
+    int result = SDL_SetWindowFullscreen(global_buffer.window, 0);
+    
+    if (result != 0)
+    {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+                                 "Error",
+                                 "Failed to set screen to windowed mode.",
+                                 NULL);
+    }
+    
+    SDL_SetWindowSize(global_buffer.window, info.w - 80, info.h - 80);
+    SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    
+    return result;
+}
+
 internal void
 process_events(SDL_Event* event)
 {
@@ -290,24 +320,12 @@ process_events(SDL_Event* event)
                     
                     if (global_is_fullscreen)
                     {
-                        
-                        SDL_DisplayMode dm = get_screen_info();
-                        SDL_RestoreWindow(global_buffer.window); //Incase it's maximized...
-                        SDL_Delay(500);
-                        
-                        if (SDL_SetWindowFullscreen(global_buffer.window, 0) != 0)
-                        {
-                            printf("Failed to set windowed\n");
-                        }
-                        
-                        SDL_SetWindowSize(global_buffer.window, dm.w - 80, dm.h - 80);
-                        SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                        set_windowed();
                         global_is_fullscreen = false;
                     }
                     else
                     {
                         set_fullscreen();
-                        SDL_Delay(500);
                         global_is_fullscreen = true;
                     }
                     
@@ -316,7 +334,7 @@ process_events(SDL_Event* event)
         } break;
     }
     // Poll Keyboard and Controller Input
-    poll_input();
+    poll_input(&global_game);
 }
 
 int main(int argc, char* argv[])
@@ -361,11 +379,12 @@ int main(int argc, char* argv[])
         goto Exit;
     }
     
-    global_is_fullscreen = true;
+    global_is_fullscreen = false;
     
-    set_fullscreen();
-    
-    initialize_controller();
+    if (global_is_fullscreen)
+        set_fullscreen();
+    else
+        set_windowed();
     
     if (!load_tiles(&global_buffer, &global_game))
         goto Exit;
@@ -385,8 +404,6 @@ int main(int argc, char* argv[])
     f32 target_fps = 60.0f;
     f32 desired_delta= 1000.0 / target_fps;
     
-    global_delta = 0.f;
-    
     /* Main Game Loop */
     while (running)
     {
@@ -397,6 +414,12 @@ int main(int argc, char* argv[])
             if (event.type == SDL_QUIT)
                 running = false;
         }
+        
+        /* Always check for controller so, 
+you dont have to restart the game 
+in order to use a controller */
+        
+        initialize_controller(&global_game);
         
         /* Main Game Simulation */
         {
