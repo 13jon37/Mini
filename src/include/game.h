@@ -36,6 +36,7 @@ typedef struct PLAYER_STRUCT {
     f32 speed;
     bool moving;
     SDL_Texture* texture;
+    SDL_Texture* sheet_texture;
     SDL_Rect text_rect;
 } player_t;
 

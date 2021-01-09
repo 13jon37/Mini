@@ -67,27 +67,40 @@ poll_input(game_t* game)
     
     /* Player Movement Code */
     
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    const u8 *state = SDL_GetKeyboardState(NULL);
+    
+    bool pressed = false;
     
     if (state[SDL_SCANCODE_W] | game->gamepad.up)
     {
-        global_game.player.y--;
+        game->player.y--;
+        pressed = true;
     }
     
     if (state[SDL_SCANCODE_A] | game->gamepad.left)
     {
-        global_game.player.x--;
+        game->player.x--;
+        pressed = true;
     }
     
     if (state[SDL_SCANCODE_S] | game->gamepad.down)
     {
-        global_game.player.y++;
+        game->player.y++;
+        pressed = true;
     }
     
     if (state[SDL_SCANCODE_D] | game->gamepad.right)
     {
-        global_game.player.x++;
+        game->player.x++;
+        pressed = true;
     }
+    
+    if (pressed)
+        game->player.moving = true;
+    else
+        game->player.moving = false;
+    
+    pressed = !pressed;
 }
 
 internal bool 
@@ -165,7 +178,7 @@ initialize_player(game_t* game, buffer_t* buffer)
     game->player.health = 100;
     
     SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
-    global_game.player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    game->player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
     if (!global_game.player.texture)
@@ -174,21 +187,21 @@ initialize_player(game_t* game, buffer_t* buffer)
         return false;
     }
     
-    /*SDL_Surface* surface = IMG_Load("Assets/soldier.png");
-    game->player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    surface = IMG_Load("Assets/sheet.png");
+    game->player.sheet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
-    if (!game->player.texture)
+    if (!game->player.sheet_texture)
     {
-        printf("Failed to load player png.\n");
+        printf("Failed to load sprite sheet png.\n");
         return false;
     }
     
-    SDL_QueryTexture(global_game.player.texture,
+    SDL_QueryTexture(game->player.sheet_texture,
                      NULL,
                      NULL,
                      &game->player.text_rect.w,
-                     &game->player.text_rect.h);*/
+                     &game->player.text_rect.h);
     
     return true;
 }
@@ -196,8 +209,23 @@ initialize_player(game_t* game, buffer_t* buffer)
 internal void
 player_render(game_t* game, buffer_t* buffer)
 {
+    u32 ticks = SDL_GetTicks();
+    u32 sprite = (ticks / 100) % 3;
+    
     SDL_Rect rect = { game->player.x, game->player.y, 16, 16 };
-    SDL_RenderCopy(buffer->renderer, game->player.texture, NULL, &rect);
+    
+    SDL_Rect rect2;
+    rect2.x = 0;
+    rect2.y = 0;
+    rect2.w = 16;
+    rect2.h = 16;
+    
+    if (game->player.moving)
+        rect2.x = sprite << 4;
+    else
+        rect2.x = 0;
+    
+    SDL_RenderCopy(buffer->renderer, game->player.sheet_texture, &rect2, &rect);
 }
 
 internal void
@@ -392,6 +420,7 @@ in order to use a controller */
     SDL_GameControllerClose(global_game_controller);
     SDL_DestroyTexture(global_game.tiles.texture);
     SDL_DestroyTexture(global_game.player.texture);
+    SDL_DestroyTexture(global_game.player.sheet_texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
     
