@@ -7,60 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "include/language_layer.h"
-
-#define GAME_TITLE "Game Title"
-#define GAME_WIDTH 512
-#define GAME_HEIGHT 288
-
-typedef struct BUFFER_STRUCT {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-} buffer_t;
-
-typedef struct CONTROLLER_STRUCT {
-    bool up;
-    bool down;
-    bool left;
-    bool right;
-    bool start;
-    bool back;
-    bool left_shoulder;
-    bool right_shoulder;
-    bool a_button;
-    bool b_button;
-    bool x_button;
-    bool y_button;
-    i16 stick_x;
-    i16 stick_y;
-    bool controller_connected;
-} controller_t;
-
-typedef struct PLAYER_STRUCT {
-    u32 x, y;
-    u32 health;
-    f32 speed;
-    bool moving;
-    SDL_Texture* texture;
-} player_t;
-
-typedef struct TILE_STRUCT {
-    u32 x, y;
-    SDL_Texture* texture;
-} tile_t;
-
-typedef struct PERFORMANCE_DATA_STRUCT {
-    f32 frames_per_second;
-    u64 total_rendered_frames;
-    bool is_fullscreen;
-    TTF_Font* fps_font;
-    SDL_Texture* fps_texture;
-} performance_t;
-
-typedef struct GAME_STRUCT {
-    tile_t tiles;
-    player_t player;
-    controller_t gamepad;
-} game_t;
+#include "include/game.h"
 
 global_variable buffer_t global_buffer;
 global_variable game_t global_game;
@@ -127,7 +74,7 @@ poll_input(game_t* game)
         global_game.player.y--;
     }
     
-    if (state[SDL_SCANCODE_A] |  game->gamepad.left)
+    if (state[SDL_SCANCODE_A] | game->gamepad.left)
     {
         global_game.player.x--;
     }
@@ -210,13 +157,12 @@ render_fps_text(performance_t* perf, buffer_t* buffer, f32 fps)
     SDL_DestroyTexture(perf->fps_texture);
 }
 
-
 internal bool 
-initialize_player(buffer_t* buffer)
+initialize_player(game_t* game, buffer_t* buffer)
 {
-    global_game.player.x = 25;
-    global_game.player.y = 25;
-    global_game.player.health = 100;
+    game->player.x = 25;
+    game->player.y = 25;
+    game->player.health = 100;
     
     SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
     global_game.player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -227,6 +173,22 @@ initialize_player(buffer_t* buffer)
         printf("Failed to load player bmp.\n");
         return false;
     }
+    
+    /*SDL_Surface* surface = IMG_Load("Assets/soldier.png");
+    game->player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    SDL_FreeSurface(surface);
+    
+    if (!game->player.texture)
+    {
+        printf("Failed to load player png.\n");
+        return false;
+    }
+    
+    SDL_QueryTexture(global_game.player.texture,
+                     NULL,
+                     NULL,
+                     &game->player.text_rect.w,
+                     &game->player.text_rect.h);*/
     
     return true;
 }
@@ -379,7 +341,7 @@ int main(int argc, char* argv[])
     if (!load_fonts(&global_performance_data))
         goto Exit;
     
-    if (!initialize_player(&global_buffer))
+    if (!initialize_player(&global_game, &global_buffer))
     {
         printf("Failed to initalize player!\n");
         goto Exit;
@@ -389,12 +351,12 @@ int main(int argc, char* argv[])
     bool running = true;
     
     f32 target_fps = 60.0f;
-    f32 desired_delta= 1000.0 / target_fps;
+    f32 desired_delta = 1000.0 / target_fps;
     
     /* Main Game Loop */
     while (running)
     {
-        i32 start_counter = SDL_GetTicks();
+        f32 start_counter = SDL_GetTicks();
         /* Event Loop */
         while (SDL_PollEvent(&event))
         {
