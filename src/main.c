@@ -26,6 +26,7 @@ initialize_controller(game_t* game)
                 game->gamepad.controller_connected = true;
                 break;
             } else {
+                game->gamepad.controller_connected = false;
                 fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
             }
         }
@@ -54,7 +55,7 @@ controller_setup(game_t* game)
     }
     else
     {
-        printf("Warning: Unable to open game controller or no controller plugged in! SDL Error: %s\n", SDL_GetError());
+        printf("Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError());
     }
 }
 
@@ -76,7 +77,7 @@ poll_input(game_t* game)
         game->player.y--;
         pressed = true;
         
-        game->player.direction_index = 1;
+        game->player.direction_index = PLAYER_UP;
     }
     
     if (state[SDL_SCANCODE_A] | game->gamepad.left)
@@ -84,7 +85,7 @@ poll_input(game_t* game)
         game->player.x--;
         pressed = true;
         
-        game->player.direction_index = 3;
+        game->player.direction_index = PLAYER_LEFT;
     }
     
     if (state[SDL_SCANCODE_S] | game->gamepad.down)
@@ -92,7 +93,7 @@ poll_input(game_t* game)
         game->player.y++;
         pressed = true;
         
-        game->player.direction_index = 0;
+        game->player.direction_index = PLAYER_DOWN;
     }
     
     if (state[SDL_SCANCODE_D] | game->gamepad.right)
@@ -100,7 +101,7 @@ poll_input(game_t* game)
         game->player.x++;
         pressed = true;
         
-        game->player.direction_index = 2;
+        game->player.direction_index = PLAYER_RIGHT;
     }
     
     if (pressed)
@@ -130,11 +131,11 @@ load_tiles(buffer_t* buffer, game_t* game)
 internal void
 render_tiles(game_t* game, buffer_t* buffer)
 {
-    for (i32 y = 0; y < GAME_HEIGHT; y+=16)
+    for (u32 y = 0; y < GAME_HEIGHT; y+=GAME_SIZE)
     {
-        for (i32 x = 0; x < GAME_WIDTH; x+=16)
+        for (u32 x = 0; x < GAME_WIDTH; x+=GAME_SIZE)
         {
-            SDL_Rect rect = { x, y, 16, 16 };
+            SDL_Rect rect = { x, y, GAME_SIZE, GAME_SIZE };
             SDL_RenderCopy(buffer->renderer, game->tiles.texture, NULL, &rect);
         }
     }
@@ -281,7 +282,6 @@ player_sprite_animations(game_t* game)
 internal void
 player_render(game_t* game, buffer_t* buffer)
 {
-    
     SDL_Rect rect = { game->player.x, game->player.y,
         game->player.text_rect.w / 3, game->player.text_rect.h / 4 };
     
@@ -377,6 +377,38 @@ process_events(SDL_Event* event)
     poll_input(&global_game);
 }
 
+internal bool
+initialize_game(void)
+{
+    // Set logical render -- basically set buffer render res
+    if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
+    {
+        printf("Failed to set logical game res.\n");
+        return false;
+    }
+    
+    if (global_performance_data.is_fullscreen)
+        set_fullscreen();
+    else
+        set_windowed();
+    
+    SDL_ShowCursor(SDL_DISABLE);
+    
+    if (!load_tiles(&global_buffer, &global_game))
+        return false;
+    
+    if (!load_fonts(&global_performance_data))
+        return false;
+    
+    if (!initialize_player(&global_game, &global_buffer))
+    {
+        printf("Failed to initalize player!\n");
+        return false;
+    }
+    
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     
@@ -412,29 +444,8 @@ int main(int argc, char* argv[])
                                                 -1,  // GPU thingy
                                                 SDL_RENDERER_ACCELERATED); // Flags
     
-    // Set logical render -- basically set buffer render res
-    if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
-    {
-        printf("Failed to set logical game res.\n");
+    if (!initialize_game())
         goto Exit;
-    }
-    
-    if (global_performance_data.is_fullscreen)
-        set_fullscreen();
-    else
-        set_windowed();
-    
-    if (!load_tiles(&global_buffer, &global_game))
-        goto Exit;
-    
-    if (!load_fonts(&global_performance_data))
-        goto Exit;
-    
-    if (!initialize_player(&global_game, &global_buffer))
-    {
-        printf("Failed to initalize player!\n");
-        goto Exit;
-    }
     
     SDL_Event event;
     bool running = true;
