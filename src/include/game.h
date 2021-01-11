@@ -64,6 +64,7 @@ typedef struct GAME_STRUCT {
     tile_t tiles;
     player_t player;
     controller_t gamepad;
+    SDL_Texture* cursor_texture;
 } game_t;
 
 #endif //GAME_H

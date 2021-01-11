@@ -193,16 +193,6 @@ initialize_player(game_t* game, buffer_t* buffer)
     game->player.player_render_rect.w = GAME_SIZE;
     game->player.player_render_rect.h = GAME_SIZE;
     
-    /*SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
-    game->player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
-    SDL_FreeSurface(surface);
-    
-    if (!global_game.player.texture)
-    {
-        printf("Failed to load player bmp.\n");
-        return false;
-    }*/
-    
     SDL_Surface* surface = IMG_Load("Assets/new_sheet.png");
     game->player.sheet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
@@ -291,6 +281,17 @@ player_render(game_t* game, buffer_t* buffer)
 }
 
 internal void
+render_cursor(game_t* game, buffer_t* buffer)
+{
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+    
+    SDL_Rect rect = { mouse_x, mouse_y, 8, 8 };
+    
+    SDL_RenderCopy(buffer->renderer, game->cursor_texture, NULL, &rect);
+}
+
+internal void
 render_buffer_to_screen(game_t* game, buffer_t* buffer)
 {
     SDL_RenderClear(buffer->renderer);
@@ -301,6 +302,8 @@ render_buffer_to_screen(game_t* game, buffer_t* buffer)
     render_tiles(game, buffer);
     
     player_render(game, buffer);
+    
+    render_cursor(game, buffer);
     
     render_fps_text(&global_performance_data, buffer, global_performance_data.frames_per_second);
     
@@ -392,7 +395,14 @@ initialize_game(void)
     else
         set_windowed();
     
-    SDL_ShowCursor(SDL_DISABLE);
+    SDL_ShowCursor(0);
+    
+    SDL_Surface* surface = IMG_Load("Assets/cursor.png");
+    global_game.cursor_texture = SDL_CreateTextureFromSurface(global_buffer.renderer, surface);
+    SDL_FreeSurface(surface);
+    
+    if (!global_game.cursor_texture)
+        return false;
     
     if (!load_tiles(&global_buffer, &global_game))
         return false;
@@ -492,6 +502,7 @@ in order to use a controller */
     SDL_GameControllerClose(global_game_controller);
     SDL_DestroyTexture(global_game.tiles.texture);
     SDL_DestroyTexture(global_game.player.sheet_texture);
+    SDL_DestroyTexture(global_game.cursor_texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
     
