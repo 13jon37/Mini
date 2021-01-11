@@ -4,8 +4,14 @@
 #define GAME_H
 
 #define GAME_TITLE "Pickaxe Man"
+#define GAME_SIZE 16
 #define GAME_WIDTH 512
 #define GAME_HEIGHT 288
+
+#define PLAYER_DOWN  0
+#define PLAYER_UP    1
+#define PLAYER_RIGHT 2
+#define PLAYER_LEFT  3
 
 typedef struct BUFFER_STRUCT {
     SDL_Window* window;
@@ -35,9 +41,10 @@ typedef struct PLAYER_STRUCT {
     u32 health;
     f32 speed;
     bool moving;
-    SDL_Texture* texture;
+    u8 direction_index;
     SDL_Texture* sheet_texture;
     SDL_Rect text_rect;
+    SDL_Rect player_render_rect;
 } player_t;
 
 typedef struct TILE_STRUCT {

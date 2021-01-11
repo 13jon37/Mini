@@ -75,24 +75,32 @@ poll_input(game_t* game)
     {
         game->player.y--;
         pressed = true;
+        
+        game->player.direction_index = 1;
     }
     
     if (state[SDL_SCANCODE_A] | game->gamepad.left)
     {
         game->player.x--;
         pressed = true;
+        
+        game->player.direction_index = 3;
     }
     
     if (state[SDL_SCANCODE_S] | game->gamepad.down)
     {
         game->player.y++;
         pressed = true;
+        
+        game->player.direction_index = 0;
     }
     
     if (state[SDL_SCANCODE_D] | game->gamepad.right)
     {
         game->player.x++;
         pressed = true;
+        
+        game->player.direction_index = 2;
     }
     
     if (pressed)
@@ -176,8 +184,15 @@ initialize_player(game_t* game, buffer_t* buffer)
     game->player.x = 25;
     game->player.y = 25;
     game->player.health = 100;
+    game->player.moving = false;
+    game->player.direction_index = 0;
     
-    SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
+    game->player.player_render_rect.x = 0;
+    game->player.player_render_rect.y = 0;
+    game->player.player_render_rect.w = GAME_SIZE;
+    game->player.player_render_rect.h = GAME_SIZE;
+    
+    /*SDL_Surface* surface = SDL_LoadBMP("Assets/soldier_standing.bmpx");
     game->player.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
@@ -185,9 +200,9 @@ initialize_player(game_t* game, buffer_t* buffer)
     {
         printf("Failed to load player bmp.\n");
         return false;
-    }
+    }*/
     
-    surface = IMG_Load("Assets/sheet.png");
+    SDL_Surface* surface = IMG_Load("Assets/new_sheet.png");
     game->player.sheet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
@@ -206,26 +221,73 @@ initialize_player(game_t* game, buffer_t* buffer)
     return true;
 }
 
-internal void
-player_render(game_t* game, buffer_t* buffer)
+internal void 
+player_sprite_animations(game_t* game)
 {
     u32 ticks = SDL_GetTicks();
     u32 sprite = (ticks / 100) % 3;
     
-    SDL_Rect rect = { game->player.x, game->player.y, 16, 16 };
+    // If moving set animation in proper direction
+    if (game->player.moving && game->player.direction_index == PLAYER_DOWN)
+    {
+        game->player.player_render_rect.y = 0;
+        game->player.player_render_rect.x = sprite << 4;
+    }
     
-    SDL_Rect rect2;
-    rect2.x = 0;
-    rect2.y = 0;
-    rect2.w = 16;
-    rect2.h = 16;
+    if (game->player.moving && game->player.direction_index == PLAYER_UP)
+    {
+        game->player.player_render_rect.y = 48;
+        game->player.player_render_rect.x = sprite << 4;
+    }
     
-    if (game->player.moving)
-        rect2.x = sprite << 4;
-    else
-        rect2.x = 0;
+    if (game->player.moving && game->player.direction_index == PLAYER_RIGHT)
+    {
+        game->player.player_render_rect.y = 32;
+        game->player.player_render_rect.x = sprite << 4;
+    }
     
-    SDL_RenderCopy(buffer->renderer, game->player.sheet_texture, &rect2, &rect);
+    if (game->player.moving && game->player.direction_index == PLAYER_LEFT)
+    {
+        game->player.player_render_rect.y = 16;
+        game->player.player_render_rect.x = sprite << 4;
+    }
+    
+    // If not moving set idle to the direction last moving
+    if (!game->player.moving && game->player.direction_index == PLAYER_DOWN)
+    {
+        game->player.player_render_rect.x = 0;
+        game->player.player_render_rect.y = 0;
+    }
+    
+    if (!game->player.moving && game->player.direction_index == PLAYER_UP)
+    {
+        game->player.player_render_rect.x = 0;
+        game->player.player_render_rect.y = 48;
+    }
+    
+    if (!game->player.moving && game->player.direction_index == PLAYER_RIGHT)
+    {
+        game->player.player_render_rect.x = 0;
+        game->player.player_render_rect.y = 32;
+    }
+    
+    if (!game->player.moving && game->player.direction_index == PLAYER_LEFT)
+    {
+        game->player.player_render_rect.x = 0;
+        game->player.player_render_rect.y = 16;
+    }
+}
+
+internal void
+player_render(game_t* game, buffer_t* buffer)
+{
+    
+    SDL_Rect rect = { game->player.x, game->player.y,
+        game->player.text_rect.w / 3, game->player.text_rect.h / 4 };
+    
+    player_sprite_animations(game);
+    
+    SDL_RenderCopy(buffer->renderer, game->player.sheet_texture, &game->player.player_render_rect, &rect);
 }
 
 internal void
@@ -302,7 +364,6 @@ process_events(SDL_Event* event)
             switch (event->key.keysym.sym)
             {
                 case SDLK_F11: {
-                    
                     if (global_performance_data.is_fullscreen)
                         set_windowed();
                     else
@@ -419,7 +480,6 @@ in order to use a controller */
     Exit:
     SDL_GameControllerClose(global_game_controller);
     SDL_DestroyTexture(global_game.tiles.texture);
-    SDL_DestroyTexture(global_game.player.texture);
     SDL_DestroyTexture(global_game.player.sheet_texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
