@@ -3,8 +3,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define GAME_TITLE "Pickaxe Man"
-#define GAME_SIZE 16
+#define GAME_TITLE "Mini Gamer"
+#define GAME_SIZE 16             // Game is 16 x 16
 #define GAME_WIDTH 512
 #define GAME_HEIGHT 288
 

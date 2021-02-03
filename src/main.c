@@ -60,18 +60,44 @@ controller_setup(game_t* game)
 }
 
 internal void 
-poll_input(game_t* game)
+mouse_input(SDL_MouseButtonEvent* mouse_event)
+{
+    /* Player Ability Code */
+    
+    bool pressed = false;
+    
+    if (mouse_event->button == SDL_BUTTON_LEFT)
+    {
+        // ex fire or throw something
+        
+        // If the mouse is down it is pressed
+        if (mouse_event->type == SDL_MOUSEBUTTONDOWN)
+        {
+            pressed = true;
+            printf("Pressed\n");
+        }
+        
+        // If mouse is up do not do anything thus not pressed
+        if (mouse_event->type == SDL_MOUSEBUTTONUP)
+            pressed = false;
+    }
+    pressed = !pressed;
+}
+
+internal void 
+poll_input(game_t* game, SDL_MouseButtonEvent m_event)
 {
     // If there is a controller connected set it up
     if (game->gamepad.controller_connected)
         controller_setup(game);
     
-    /* Player Movement Code */
+    /* Keyboard Code */
     
     const u8 *state = SDL_GetKeyboardState(NULL);
     
     bool pressed = false;
     
+    /* Player Movement Code */
     if (state[SDL_SCANCODE_W] | game->gamepad.up)
     {
         game->player.y--;
@@ -108,6 +134,9 @@ poll_input(game_t* game)
         game->player.moving = true;
     else
         game->player.moving = false;
+    
+    /* Mouse Code */
+    mouse_input(&m_event);
     
     pressed = !pressed;
 }
@@ -283,7 +312,7 @@ player_render(game_t* game, buffer_t* buffer)
 internal void
 render_cursor(game_t* game, buffer_t* buffer)
 {
-    int mouse_x, mouse_y;
+    i32 mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
     
     SDL_Rect rect = { mouse_x, mouse_y, 8, 8 };
@@ -376,8 +405,8 @@ process_events(SDL_Event* event)
             }
         } break;
     }
-    // Poll Keyboard and Controller Input
-    poll_input(&global_game);
+    // Poll Keyboard, Mouse, and Controller Input
+    poll_input(&global_game, event->button);
 }
 
 internal bool
@@ -395,14 +424,14 @@ initialize_game(void)
     else
         set_windowed();
     
-    SDL_ShowCursor(0);
+    // Code to load custom cursor
     
+    /*SDL_ShowCursor(0);
     SDL_Surface* surface = IMG_Load("Assets/cursor.png");
     global_game.cursor_texture = SDL_CreateTextureFromSurface(global_buffer.renderer, surface);
     SDL_FreeSurface(surface);
-    
     if (!global_game.cursor_texture)
-        return false;
+        return false;*/
     
     if (!load_tiles(&global_buffer, &global_game))
         return false;
