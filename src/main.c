@@ -12,20 +12,24 @@
 global_variable buffer_t global_buffer;
 global_variable game_t global_game;
 global_variable performance_t global_performance_data;
-
 global_variable SDL_GameController* global_game_controller;
 
 internal void
 initialize_controller(game_t* game) 
 {
     // Code copied straight from the documentation :)
-    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-        if (SDL_IsGameController(i)) {
+    for (int i = 0; i < SDL_NumJoysticks(); ++i)
+    {
+        if (SDL_IsGameController(i))
+        {
             global_game_controller = SDL_GameControllerOpen(i);
-            if (global_game_controller) {
+            if (global_game_controller)
+            {
                 game->gamepad.controller_connected = true;
                 break;
-            } else {
+            }
+            else
+            {
                 game->gamepad.controller_connected = false;
                 fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
             }
@@ -60,7 +64,7 @@ controller_setup(game_t* game)
 }
 
 internal void 
-mouse_input(SDL_MouseButtonEvent* mouse_event)
+mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
 {
     /* Player Ability Code */
     
@@ -130,15 +134,49 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
         game->player.direction_index = PLAYER_RIGHT;
     }
     
+    // Controller Buttons
+    if (game->gamepad.a_button) {
+        printf("A button pressed.\n");
+    }
+    
     if (pressed)
         game->player.moving = true;
     else
         game->player.moving = false;
     
     /* Mouse Code */
-    mouse_input(&m_event);
+    mouse_input(game, &m_event);
     
     pressed = !pressed;
+}
+
+internal bool
+load_audio(game_t* game)
+{
+    /* Load the WAV */
+    if (!SDL_LoadWAV("Assets/Dungeon.wav", &game->wav_spec, &game->wav_buffer, &game->wav_length))
+    {
+        fprintf(stderr, "Could not open test.wav: %s\n", SDL_GetError());
+        return false;
+    }
+    else
+    {
+        /* Do stuff with the WAV data, and then... */
+        
+        game->device_id = SDL_OpenAudioDevice(0, 0, &game->wav_spec, 0, 0);
+        
+        i32 success = SDL_QueueAudio(game->device_id, game->wav_buffer, game->wav_length);
+        
+        if (success != 0)
+        {
+            printf("Failed to queue audio!\n");
+            return false;
+        }
+        
+        SDL_PauseAudioDevice(game->device_id, 0);
+    }
+    
+    return true;
 }
 
 internal bool 
@@ -433,6 +471,9 @@ initialize_game(void)
     if (!global_game.cursor_texture)
         return false;*/
     
+    if (!load_audio(&global_game))
+        return false;
+    
     if (!load_tiles(&global_buffer, &global_game))
         return false;
     
@@ -451,7 +492,7 @@ initialize_game(void)
 int main(int argc, char* argv[])
 {
     
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0)
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
@@ -534,6 +575,10 @@ in order to use a controller */
     SDL_DestroyTexture(global_game.cursor_texture);
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
+    
+    SDL_CloseAudioDevice(global_game.device_id);
+    SDL_FreeWAV(game->wav_buffer);
+    SDL_CloseAudio();
     
     TTF_CloseFont(global_performance_data.fps_font);
     TTF_Quit();

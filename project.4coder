@@ -44,7 +44,31 @@ command_list = {
 			{ "run.bat", .os = "win" },
 		},
 	},
+	
+	{
+		.name = "build_release",
+		.out = "*compilation*",
+		.footer_panel = true,
+		.save_dirty_files = true,
+		.cursor_at_end = false,
+		.cmd = {
+			{ "build_release.bat", .os = "win" },
+		},
+	},
+	
+	{
+		.name = "run_release",
+		.out = "*compilation*",
+		.footer_panel = true,
+		.save_dirty_files = true,
+		.cursor_at_end = false,
+		.cmd = {
+			{ "run_release.bat", .os = "win" },
+		},
+	},
 };
 
 fkey_command[1] = "build";
 fkey_command[3] = "run";
+fkey_command[5] = "build_release";
+fkey_command[6] = "run_release";
