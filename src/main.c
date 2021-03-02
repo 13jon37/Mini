@@ -249,8 +249,8 @@ render_fps_text(performance_t* perf, buffer_t* buffer, f32 fps)
 internal bool 
 initialize_player(game_t* game, buffer_t* buffer)
 {
-    game->player.x = 25;
-    game->player.y = 25;
+    game->player.x = (GAME_WIDTH / 2) - GAME_SIZE;
+    game->player.y = (GAME_HEIGHT / 2) - GAME_SIZE;
     game->player.health = 100;
     game->player.moving = false;
     game->player.direction_index = 0;
@@ -482,7 +482,7 @@ initialize_game(void)
     
     if (!initialize_player(&global_game, &global_buffer))
     {
-        printf("Failed to initalize player!\n");
+        printf("Failed to initialize player!\n");
         return false;
     }
     
@@ -577,7 +577,7 @@ in order to use a controller */
     SDL_DestroyWindow(global_buffer.window);
     
     SDL_CloseAudioDevice(global_game.device_id);
-    SDL_FreeWAV(game->wav_buffer);
+    SDL_FreeWAV(global_game.wav_buffer);
     SDL_CloseAudio();
     
     TTF_CloseFont(global_performance_data.fps_font);
@@ -587,3 +587,4 @@ in order to use a controller */
     
     return 0; 
 }
+
