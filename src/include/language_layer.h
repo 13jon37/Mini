@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define internal static
-#define local_persist static
+#define internal        static
+#define local_persist   static
 #define global_variable static
 
 typedef int8_t i8;

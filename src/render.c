@@ -71,10 +71,10 @@ internal bool
 load_bullet(buffer_t* buffer, game_t* game)
 {
     SDL_Surface* surface = IMG_Load("Assets/bullet.png");
-    game->tiles.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
+    game->bullet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
-    if (!game->tiles.texture)
+    if (!game->bullet_texture)
     {
         printf("Failed to load bullet texture.\n");
         return false;
@@ -83,5 +83,11 @@ load_bullet(buffer_t* buffer, game_t* game)
     return true;
 }
 
+internal void
+render_bullet(game_t* game, buffer_t* buffer)
+{
+    SDL_Rect rect = { 0, 0, GAME_SIZE, GAME_SIZE };
+    SDL_RenderCopy(buffer->renderer, game->bullet_texture, NULL, &rect);
+}
 
 

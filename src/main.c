@@ -65,11 +65,9 @@ controller_setup(game_t* game)
     }
 }
 
-internal void 
+internal bool 
 mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
 {
-    /* Player Ability Code */
-    
     bool pressed = false;
     
     if (mouse_event->button == SDL_BUTTON_LEFT)
@@ -87,7 +85,8 @@ mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
         if (mouse_event->type == SDL_MOUSEBUTTONUP)
             pressed = false;
     }
-    pressed = !pressed;
+    
+    return pressed;
 }
 
 internal void 
@@ -146,8 +145,11 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
     else
         game->player.moving = false;
     
-    /* Mouse Code */
-    mouse_input(game, &m_event);
+    /* Funnel Player Ability Code */
+    if (mouse_input(game, &m_event))
+        game->player.is_shooting = true;
+    else
+        game->player.is_shooting = false;
     
     pressed = !pressed;
 }
@@ -189,6 +191,7 @@ initialize_player(game_t* game, buffer_t* buffer)
     game->player.health = 100;
     game->player.moving = false;
     game->player.direction_index = 0;
+    game->player.is_shooting = false;
     
     game->player.player_render_rect.x = 0;
     game->player.player_render_rect.y = 0;
@@ -307,6 +310,9 @@ render_buffer_to_screen(game_t* game, buffer_t* buffer)
     
     render_cursor(game, buffer);
     
+    if (game->player.is_shooting)
+        render_bullet(game, buffer);
+    
     render_fps_text(&global_performance_data, buffer, global_performance_data.frames_per_second);
     
     SDL_RenderPresent(buffer->renderer);
@@ -415,8 +421,8 @@ initialize_game(void)
     if (!load_tiles(&global_buffer, &global_game))
         return false;
     
-    /*if (!load_bullet(&global_buffer, &global_game))
-        return false;*/
+    if (!load_bullet(&global_buffer, &global_game))
+        return false;
     
     if (!initialize_player(&global_game, &global_buffer))
     {

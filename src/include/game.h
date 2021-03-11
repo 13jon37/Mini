@@ -13,6 +13,23 @@
 #define PLAYER_RIGHT 2
 #define PLAYER_LEFT  3
 
+/* Trying to implement ECS */
+
+// https://gamedev.stackexchange.com/questions/172584/how-could-i-implement-an-ecs-in-c
+
+typedef struct POSITION_STRUCT {
+    u32 entity_id;
+    u32 x;
+    u32 y;
+} position_t;
+
+typedef struct COMPONENT_LIST_STRUCT {
+    position_t position_componenets[100]; // I have no idea
+    u32 total_position_components;
+} component_lists_t;
+
+/* ************************************ */
+
 typedef struct BUFFER_STRUCT {
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -45,6 +62,7 @@ typedef struct PLAYER_STRUCT {
     SDL_Texture* sheet_texture;
     SDL_Rect text_rect;
     SDL_Rect player_render_rect;
+    bool is_shooting;
 } player_t;
 
 typedef struct TILE_STRUCT {
@@ -69,6 +87,7 @@ typedef struct GAME_STRUCT {
     u32 wav_length;
     u8 *wav_buffer;
     SDL_AudioDeviceID device_id;
+    SDL_Texture* bullet_texture;
 } game_t;
 
 #endif //GAME_H
