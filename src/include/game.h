@@ -83,10 +83,6 @@ typedef struct GAME_STRUCT {
     player_t player;
     controller_t gamepad;
     SDL_Texture* cursor_texture;
-    SDL_AudioSpec wav_spec;
-    u32 wav_length;
-    u8 *wav_buffer;
-    SDL_AudioDeviceID device_id;
     SDL_Texture* bullet_texture;
 } game_t;
 

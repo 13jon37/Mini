@@ -10,6 +10,7 @@
 #include "include/game.h"
 
 #include "render.c"
+#include "audio.c"
 
 global_variable buffer_t global_buffer;
 global_variable game_t global_game;
@@ -152,35 +153,6 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
         game->player.is_shooting = false;
     
     pressed = !pressed;
-}
-
-internal bool
-load_audio(game_t* game)
-{
-    /* Load the WAV */
-    if (!SDL_LoadWAV("Assets/Dungeon.wav", &game->wav_spec, &game->wav_buffer, &game->wav_length))
-    {
-        fprintf(stderr, "Could not open test.wav: %s\n", SDL_GetError());
-        return false;
-    }
-    else
-    {
-        /* Do stuff with the WAV data, and then... */
-        
-        game->device_id = SDL_OpenAudioDevice(0, 0, &game->wav_spec, 0, 0);
-        
-        i32 success = SDL_QueueAudio(game->device_id, game->wav_buffer, game->wav_length);
-        
-        if (success != 0)
-        {
-            printf("Failed to queue audio!\n");
-            return false;
-        }
-        
-        SDL_PauseAudioDevice(game->device_id, 0);
-    }
-    
-    return true;
 }
 
 internal bool 
@@ -389,7 +361,7 @@ process_events(SDL_Event* event)
 }
 
 internal bool
-initialize_game(void)
+initialize_game(audio_t* audio)
 {
     // Set logical render -- basically set buffer render res
     if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
@@ -412,7 +384,7 @@ initialize_game(void)
     if (!global_game.cursor_texture)
         return false;*/
     
-    if (!load_audio(&global_game))
+    if (!load_audio(audio))
         return false;
     
     if (!load_fonts(&global_performance_data))
@@ -468,7 +440,9 @@ int main(int argc, char* argv[])
                                                 -1,  // GPU thingy
                                                 SDL_RENDERER_ACCELERATED); // Flags
     
-    if (!initialize_game())
+    audio_t audio = { 0 };
+    
+    if (!initialize_game(&audio))
         goto Exit;
     
     SDL_Event event;
@@ -520,9 +494,7 @@ in order to use a controller */
     SDL_DestroyRenderer(global_buffer.renderer);
     SDL_DestroyWindow(global_buffer.window);
     
-    SDL_CloseAudioDevice(global_game.device_id);
-    SDL_FreeWAV(global_game.wav_buffer);
-    SDL_CloseAudio();
+    free_audio(&audio);
     
     TTF_CloseFont(global_performance_data.fps_font);
     TTF_Quit();
