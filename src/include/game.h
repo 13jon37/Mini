@@ -13,23 +13,6 @@
 #define PLAYER_RIGHT 2
 #define PLAYER_LEFT  3
 
-/* Trying to implement ECS */
-
-// https://gamedev.stackexchange.com/questions/172584/how-could-i-implement-an-ecs-in-c
-
-typedef struct POSITION_STRUCT {
-    u32 entity_id;
-    u32 x;
-    u32 y;
-} position_t;
-
-typedef struct COMPONENT_LIST_STRUCT {
-    position_t position_componenets[100]; // I have no idea
-    u32 total_position_components;
-} component_lists_t;
-
-/* ************************************ */
-
 typedef struct BUFFER_STRUCT {
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -59,29 +42,6 @@ typedef struct PERFORMANCE_DATA_STRUCT {
     TTF_Font* fps_font;
     SDL_Texture* fps_texture;
 } performance_t;
-
-typedef struct CONTROLLER_STRUCT {
-    bool up;
-    bool down;
-    bool left;
-    bool right;
-    bool start;
-    bool back;
-    bool left_shoulder;
-    bool right_shoulder;
-    bool a_button;
-    bool b_button;
-    bool x_button;
-    bool y_button;
-    i16 stick_x;
-    i16 stick_y;
-    bool controller_connected;
-} controller_t;
-
-typedef struct GAME_INPUT_STRUCT {
-    SDL_GameController* game_controller;
-    controller_t gamepad;
-} game_input_t;
 
 typedef struct GAME_STRUCT {
     tile_t tiles;
