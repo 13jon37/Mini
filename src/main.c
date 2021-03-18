@@ -12,28 +12,26 @@
 #include "render.c"
 #include "audio.c"
 
-global_variable buffer_t global_buffer;
 global_variable game_t global_game;
 global_variable performance_t global_performance_data;
-global_variable SDL_GameController* global_game_controller;
 
 internal void
-initialize_controller(game_t* game) 
+initialize_controller(game_input_t* input) 
 {
     // Code copied straight from the documentation :)
     for (int i = 0; i < SDL_NumJoysticks(); ++i)
     {
         if (SDL_IsGameController(i))
         {
-            global_game_controller = SDL_GameControllerOpen(i);
-            if (global_game_controller)
+            input->game_controller = SDL_GameControllerOpen(i);
+            if (input->game_controller)
             {
-                game->gamepad.controller_connected = true;
+                input->gamepad.controller_connected = true;
                 break;
             }
             else
             {
-                game->gamepad.controller_connected = false;
+                input->gamepad.controller_connected = false;
                 fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
             }
         }
@@ -41,24 +39,24 @@ initialize_controller(game_t* game)
 }
 
 internal void
-controller_setup(game_t* game)
+controller_setup(game_input_t* input)
 {
-    if (SDL_GameControllerGetAttached(global_game_controller))
+    if (SDL_GameControllerGetAttached(input->game_controller))
     {
-        game->gamepad.up = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
-        game->gamepad.down = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-        game->gamepad.left = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-        game->gamepad.right = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-        game->gamepad.start = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_START);
-        game->gamepad.back = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_BACK);
-        game->gamepad.left_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
-        game->gamepad.right_shoulder = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-        game->gamepad.a_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_A);
-        game->gamepad.b_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_B);
-        game->gamepad.x_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_X);
-        game->gamepad.y_button = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_BUTTON_Y);
-        game->gamepad.stick_x = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTX);
-        game->gamepad.stick_y = SDL_GameControllerGetButton(global_game_controller, SDL_CONTROLLER_AXIS_LEFTY);
+        input->gamepad.up = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
+        input->gamepad.down = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+        input->gamepad.left = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+        input->gamepad.right = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+        input->gamepad.start = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_START);
+        input->gamepad.back = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_BACK);
+        input->gamepad.left_shoulder = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+        input->gamepad.right_shoulder = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+        input->gamepad.a_button = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_A);
+        input->gamepad.b_button = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_B);
+        input->gamepad.x_button = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_X);
+        input->gamepad.y_button = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_BUTTON_Y);
+        input->gamepad.stick_x = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_AXIS_LEFTX);
+        input->gamepad.stick_y = SDL_GameControllerGetButton(input->game_controller, SDL_CONTROLLER_AXIS_LEFTY);
     }
     else
     {
@@ -91,11 +89,11 @@ mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
 }
 
 internal void 
-poll_input(game_t* game, SDL_MouseButtonEvent m_event)
+poll_input(game_t* game, game_input_t* input, SDL_MouseButtonEvent m_event)
 {
     // If there is a controller connected set it up
-    if (game->gamepad.controller_connected)
-        controller_setup(game);
+    if (input->gamepad.controller_connected)
+        controller_setup(input);
     
     /* Keyboard Code */
     
@@ -104,7 +102,7 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
     bool pressed = false;
     
     /* Player Movement Code */
-    if (state[SDL_SCANCODE_W] | game->gamepad.up)
+    if (state[SDL_SCANCODE_W] | input->gamepad.up)
     {
         game->player.y--;
         pressed = true;
@@ -112,7 +110,7 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
         game->player.direction_index = PLAYER_UP;
     }
     
-    if (state[SDL_SCANCODE_A] | game->gamepad.left)
+    if (state[SDL_SCANCODE_A] | input->gamepad.left)
     {
         game->player.x--;
         pressed = true;
@@ -120,7 +118,7 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
         game->player.direction_index = PLAYER_LEFT;
     }
     
-    if (state[SDL_SCANCODE_S] | game->gamepad.down)
+    if (state[SDL_SCANCODE_S] | input->gamepad.down)
     {
         game->player.y++;
         pressed = true;
@@ -128,7 +126,7 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
         game->player.direction_index = PLAYER_DOWN;
     }
     
-    if (state[SDL_SCANCODE_D] | game->gamepad.right)
+    if (state[SDL_SCANCODE_D] | input->gamepad.right)
     {
         game->player.x++;
         pressed = true;
@@ -137,7 +135,7 @@ poll_input(game_t* game, SDL_MouseButtonEvent m_event)
     }
     
     // Controller Buttons
-    if (game->gamepad.a_button) {
+    if (input->gamepad.a_button) {
         printf("A button pressed.\n");
     }
     
@@ -307,13 +305,13 @@ get_screen_info(void)
 }
 
 internal void
-set_fullscreen(void)
+set_fullscreen(buffer_t* buffer)
 {
     SDL_DisplayMode info = get_screen_info();
     
-    SDL_SetWindowSize(global_buffer.window, info.w, info.h);
+    SDL_SetWindowSize(buffer->window, info.w, info.h);
     
-    if (SDL_SetWindowFullscreen(global_buffer.window, SDL_WINDOW_FULLSCREEN) != 0) {
+    if (SDL_SetWindowFullscreen(buffer->window, SDL_WINDOW_FULLSCREEN) != 0) {
         
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
@@ -323,23 +321,23 @@ set_fullscreen(void)
 }
 
 internal void
-set_windowed(void) 
+set_windowed(buffer_t* buffer) 
 {
     SDL_DisplayMode info = get_screen_info();
     
-    if (SDL_SetWindowFullscreen(global_buffer.window, 0) != 0) {
+    if (SDL_SetWindowFullscreen(buffer->window, 0) != 0) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
                                  "Failed to set screen to windowed mode.",
                                  NULL);
     }
     
-    SDL_SetWindowSize(global_buffer.window, info.w - 80, info.h - 80);
-    SDL_SetWindowPosition(global_buffer.window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_SetWindowSize(buffer->window, info.w - 80, info.h - 80);
+    SDL_SetWindowPosition(buffer->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 }
 
 internal void
-process_events(SDL_Event* event)
+process_events(game_t* game, game_input_t* input, buffer_t* buffer, SDL_Event* event)
 {
     switch (event->type)
     {
@@ -348,32 +346,32 @@ process_events(SDL_Event* event)
             {
                 case SDLK_F11: {
                     if (global_performance_data.is_fullscreen)
-                        set_windowed();
+                        set_windowed(buffer);
                     else
-                        set_fullscreen();
+                        set_fullscreen(buffer);
                     global_performance_data.is_fullscreen = !global_performance_data.is_fullscreen;
                 } break;
             }
         } break;
     }
     // Poll Keyboard, Mouse, and Controller Input
-    poll_input(&global_game, event->button);
+    poll_input(game, input, event->button);
 }
 
 internal bool
-initialize_game(audio_t* audio)
+initialize_game(game_t* game, buffer_t* buffer, audio_t* audio)
 {
     // Set logical render -- basically set buffer render res
-    if (SDL_RenderSetLogicalSize(global_buffer.renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
+    if (SDL_RenderSetLogicalSize(buffer->renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
     {
         printf("Failed to set logical game res.\n");
         return false;
     }
     
     if (global_performance_data.is_fullscreen)
-        set_fullscreen();
+        set_fullscreen(buffer);
     else
-        set_windowed();
+        set_windowed(buffer);
     
     // Code to load custom cursor
     
@@ -390,13 +388,13 @@ initialize_game(audio_t* audio)
     if (!load_fonts(&global_performance_data))
         return false;
     
-    if (!load_tiles(&global_buffer, &global_game))
+    if (!load_tiles(buffer, game))
         return false;
     
-    if (!load_bullet(&global_buffer, &global_game))
+    if (!load_bullet(buffer, game))
         return false;
     
-    if (!initialize_player(&global_game, &global_buffer))
+    if (!initialize_player(game, buffer))
     {
         printf("Failed to initialize player!\n");
         return false;
@@ -417,17 +415,19 @@ int main(int argc, char* argv[])
         goto Exit;
     }
     
+    buffer_t buffer = { 0 };
+    
     /* Get Screen Size */
     SDL_DisplayMode display_mode_info = get_screen_info();
     
-    global_buffer.window = SDL_CreateWindow(GAME_TITLE, 
-                                            SDL_WINDOWPOS_UNDEFINED, 
-                                            SDL_WINDOWPOS_UNDEFINED,
-                                            display_mode_info.w,
-                                            display_mode_info.h,
-                                            SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    buffer.window = SDL_CreateWindow(GAME_TITLE, 
+                                     SDL_WINDOWPOS_UNDEFINED, 
+                                     SDL_WINDOWPOS_UNDEFINED,
+                                     display_mode_info.w,
+                                     display_mode_info.h,
+                                     SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     
-    if (!global_buffer.window) 
+    if (!buffer.window) 
     {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
                                  "Error",
@@ -436,13 +436,14 @@ int main(int argc, char* argv[])
         goto Exit;
     }
     
-    global_buffer.renderer = SDL_CreateRenderer(global_buffer.window, 
-                                                -1,  // GPU thingy
-                                                SDL_RENDERER_ACCELERATED); // Flags
-    
+    buffer.renderer = SDL_CreateRenderer(buffer.window, 
+                                         -1,  // GPU thingy
+                                         SDL_RENDERER_ACCELERATED); // Flags
+    game_t game = { 0 };
     audio_t audio = { 0 };
+    game_input_t input = { 0 };
     
-    if (!initialize_game(&audio))
+    if (!initialize_game(&game, &buffer, &audio))
         goto Exit;
     
     SDL_Event event;
@@ -466,12 +467,12 @@ int main(int argc, char* argv[])
 you dont have to restart the game 
 in order to use a controller */
         
-        initialize_controller(&global_game);
+        initialize_controller(&input);
         
         /* Main Game Simulation */
         {
-            process_events(&event);
-            render_buffer_to_screen(&global_game, &global_buffer); 
+            process_events(&game, &input, &buffer, &event);
+            render_buffer_to_screen(&game, &buffer); 
         }
         
         global_performance_data.total_rendered_frames++;
@@ -487,12 +488,12 @@ in order to use a controller */
     
     
     Exit:
-    SDL_GameControllerClose(global_game_controller);
+    SDL_GameControllerClose(input.game_controller);
     SDL_DestroyTexture(global_game.tiles.texture);
     SDL_DestroyTexture(global_game.player.sheet_texture);
     SDL_DestroyTexture(global_game.cursor_texture);
-    SDL_DestroyRenderer(global_buffer.renderer);
-    SDL_DestroyWindow(global_buffer.window);
+    SDL_DestroyRenderer(buffer.renderer);
+    SDL_DestroyWindow(buffer.window);
     
     free_audio(&audio);
     

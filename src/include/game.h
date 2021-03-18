@@ -35,24 +35,6 @@ typedef struct BUFFER_STRUCT {
     SDL_Renderer* renderer;
 } buffer_t;
 
-typedef struct CONTROLLER_STRUCT {
-    bool up;
-    bool down;
-    bool left;
-    bool right;
-    bool start;
-    bool back;
-    bool left_shoulder;
-    bool right_shoulder;
-    bool a_button;
-    bool b_button;
-    bool x_button;
-    bool y_button;
-    i16 stick_x;
-    i16 stick_y;
-    bool controller_connected;
-} controller_t;
-
 typedef struct PLAYER_STRUCT {
     u32 x, y;
     u32 health;
@@ -78,10 +60,32 @@ typedef struct PERFORMANCE_DATA_STRUCT {
     SDL_Texture* fps_texture;
 } performance_t;
 
+typedef struct CONTROLLER_STRUCT {
+    bool up;
+    bool down;
+    bool left;
+    bool right;
+    bool start;
+    bool back;
+    bool left_shoulder;
+    bool right_shoulder;
+    bool a_button;
+    bool b_button;
+    bool x_button;
+    bool y_button;
+    i16 stick_x;
+    i16 stick_y;
+    bool controller_connected;
+} controller_t;
+
+typedef struct GAME_INPUT_STRUCT {
+    SDL_GameController* game_controller;
+    controller_t gamepad;
+} game_input_t;
+
 typedef struct GAME_STRUCT {
     tile_t tiles;
     player_t player;
-    controller_t gamepad;
     SDL_Texture* cursor_texture;
     SDL_Texture* bullet_texture;
 } game_t;
