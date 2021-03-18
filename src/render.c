@@ -90,4 +90,15 @@ render_bullet(game_t* game, buffer_t* buffer)
     SDL_RenderCopy(buffer->renderer, game->bullet_texture, NULL, &rect);
 }
 
+internal void
+render_cursor(game_t* game, buffer_t* buffer)
+{
+    i32 mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+    
+    SDL_Rect rect = { mouse_x, mouse_y, 8, 8 };
+    
+    SDL_RenderCopy(buffer->renderer, game->cursor_texture, NULL, &rect);
+}
+
 
