@@ -67,25 +67,23 @@ controller_setup(game_input_t* input)
 internal bool 
 mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
 {
-    bool pressed = false;
-    
     if (mouse_event->button == SDL_BUTTON_LEFT)
     {
         // ex fire or throw something
         
         // If the mouse is down it is pressed
         if (mouse_event->type == SDL_MOUSEBUTTONDOWN)
-        {
-            pressed = true;
+        {;
             printf("Pressed\n");
+            return true;
         }
         
         // If mouse is up do not do anything thus not pressed
         if (mouse_event->type == SDL_MOUSEBUTTONUP)
-            pressed = false;
+            return false;
     }
     
-    return pressed;
+    return false;
 }
 
 internal void 
@@ -145,7 +143,7 @@ poll_input(game_t* game, game_input_t* input, SDL_MouseButtonEvent m_event)
         game->player.moving = false;
     
     /* Funnel Player Ability Code */
-    if (mouse_input(game, &m_event))
+    if (mouse_input(game, &m_event) | input->gamepad.a_button)
         game->player.is_shooting = true;
     else
         game->player.is_shooting = false;
