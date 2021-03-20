@@ -10,6 +10,7 @@
 #include "include/game.h"
 
 #include "render.c"
+#include "start_screen.c"
 #include "audio.c"
 #include "input.c"
 
@@ -19,7 +20,7 @@ global_variable game_t global_game;
 global_variable performance_t global_performance_data;
 
 internal void
-render_buffer_to_screen(game_t* game, buffer_t* buffer)
+render_buffer_to_screen(game_t *game, buffer_t *buffer)
 {
     SDL_RenderClear(buffer->renderer);
     
@@ -57,7 +58,7 @@ get_screen_info(void)
 }
 
 internal void
-set_fullscreen(buffer_t* buffer)
+set_fullscreen(buffer_t *buffer)
 {
     SDL_DisplayMode info = get_screen_info();
     
@@ -73,7 +74,7 @@ set_fullscreen(buffer_t* buffer)
 }
 
 internal void
-set_windowed(buffer_t* buffer) 
+set_windowed(buffer_t *buffer) 
 {
     SDL_DisplayMode info = get_screen_info();
     
@@ -89,7 +90,7 @@ set_windowed(buffer_t* buffer)
 }
 
 internal void
-process_events(game_t* game, game_input_t* input, buffer_t* buffer, SDL_Event* event)
+process_events(game_t *game, game_input_t *input, buffer_t *buffer, SDL_Event *event)
 {
     switch (event->type)
     {
@@ -111,7 +112,9 @@ process_events(game_t* game, game_input_t* input, buffer_t* buffer, SDL_Event* e
 }
 
 internal bool
-initialize_game(game_t* game, buffer_t* buffer, audio_t* audio)
+initialize_game(game_t *game,
+                buffer_t *buffer,
+                audio_t *audio)
 {
     // Set logical render -- basically set buffer render res
     if (SDL_RenderSetLogicalSize(buffer->renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
@@ -155,7 +158,7 @@ initialize_game(game_t* game, buffer_t* buffer, audio_t* audio)
     return true;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -192,6 +195,11 @@ int main(int argc, char* argv[])
                                          -1,  // GPU thingy
                                          SDL_RENDERER_ACCELERATED); // Flags
     game_t game = { 0 };
+    start_screen_t start_screen = { 0 };
+    
+    game.game_state.start_screen = true;
+    game.game_state.playing = false;
+    
     audio_t audio = { 0 };
     game_input_t input = { 0 };
     
@@ -218,13 +226,20 @@ int main(int argc, char* argv[])
         /* Always check for controller so, 
 you dont have to restart the game 
 in order to use a controller */
-        
         initialize_controller(&input);
         
         /* Main Game Simulation */
         {
             process_events(&game, &input, &buffer, &event);
-            render_buffer_to_screen(&game, &buffer); 
+            
+            if (game.game_state.start_screen)
+            {
+                render_start_screen(&start_screen, &buffer);
+            }
+            else if (game.game_state.playing)
+            {
+                render_buffer_to_screen(&game, &buffer); 
+            }
         }
         
         global_performance_data.total_rendered_frames++;

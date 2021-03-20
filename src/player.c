@@ -1,5 +1,5 @@
 internal bool 
-initialize_player(game_t* game, buffer_t* buffer)
+initialize_player(game_t *game, buffer_t *buffer)
 {
     game->player.x = (GAME_WIDTH / 2) - GAME_SIZE;
     game->player.y = (GAME_HEIGHT / 2) - GAME_SIZE;
@@ -33,7 +33,7 @@ initialize_player(game_t* game, buffer_t* buffer)
 }
 
 internal void 
-player_sprite_animations(game_t* game)
+player_sprite_animations(game_t *game)
 {
     u32 ticks = SDL_GetTicks();
     u32 sprite = (ticks / 100) % 3;
@@ -90,7 +90,7 @@ player_sprite_animations(game_t* game)
 }
 
 internal void
-player_render(game_t* game, buffer_t* buffer)
+player_render(game_t *game, buffer_t *buffer)
 {
     SDL_Rect rect = { game->player.x, game->player.y,
         game->player.text_rect.w / 3, game->player.text_rect.h / 4 };

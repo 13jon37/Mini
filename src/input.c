@@ -1,7 +1,7 @@
 #include "include/input.h"
 
 internal void
-initialize_controller(game_input_t* input) 
+initialize_controller(game_input_t *input) 
 {
     // Code copied straight from the documentation :)
     for (int i = 0; i < SDL_NumJoysticks(); ++i)
@@ -24,7 +24,7 @@ initialize_controller(game_input_t* input)
 }
 
 internal void
-controller_setup(game_input_t* input)
+controller_setup(game_input_t *input)
 {
     if (SDL_GameControllerGetAttached(input->game_controller))
     {
@@ -50,7 +50,7 @@ controller_setup(game_input_t* input)
 }
 
 internal bool 
-mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
+mouse_input(game_t *game, SDL_MouseButtonEvent *mouse_event)
 {
     if (mouse_event->button == SDL_BUTTON_LEFT)
     {
@@ -72,7 +72,7 @@ mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event)
 }
 
 internal void 
-poll_input(game_t* game, game_input_t* input, SDL_MouseButtonEvent m_event)
+poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
 {
     // If there is a controller connected set it up
     if (input->gamepad.controller_connected)
@@ -120,6 +120,12 @@ poll_input(game_t* game, game_input_t* input, SDL_MouseButtonEvent m_event)
     // Controller Buttons
     if (input->gamepad.a_button) {
         printf("A button pressed.\n");
+    }
+    
+    if (state[SDL_SCANCODE_F] | input->gamepad.start)
+    {
+        game->game_state.start_screen = false;
+        game->game_state.playing = true;
     }
     
     if (pressed)

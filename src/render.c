@@ -1,5 +1,5 @@
 internal bool
-load_fonts(performance_t* perf)
+load_fonts(performance_t *perf)
 {
     if (TTF_Init() == -1) {
         printf("Failed to init TTF.\n");
@@ -18,7 +18,7 @@ load_fonts(performance_t* perf)
 }
 
 internal void
-render_fps_text(performance_t* perf, buffer_t* buffer, f32 fps)
+render_fps_text(performance_t *perf, buffer_t *buffer, f32 fps)
 {
     SDL_Color Red = { 255, 0, 0, 0 };
     
@@ -39,7 +39,7 @@ render_fps_text(performance_t* perf, buffer_t* buffer, f32 fps)
 }
 
 internal bool 
-load_tiles(buffer_t* buffer, game_t* game)
+load_tiles(buffer_t *buffer, game_t *game)
 {
     SDL_Surface* surface = IMG_Load("Assets/grass.png");
     game->tiles.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -55,7 +55,7 @@ load_tiles(buffer_t* buffer, game_t* game)
 }
 
 internal void
-render_tiles(game_t* game, buffer_t* buffer)
+render_tiles(game_t *game, buffer_t *buffer)
 {
     for (u32 y = 0; y < GAME_HEIGHT; y+=GAME_SIZE)
     {
@@ -68,7 +68,7 @@ render_tiles(game_t* game, buffer_t* buffer)
 }
 
 internal bool
-load_bullet(buffer_t* buffer, game_t* game)
+load_bullet(buffer_t *buffer, game_t *game)
 {
     SDL_Surface* surface = IMG_Load("Assets/bullet.png");
     game->bullet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -84,14 +84,14 @@ load_bullet(buffer_t* buffer, game_t* game)
 }
 
 internal void
-render_bullet(game_t* game, buffer_t* buffer)
+render_bullet(game_t *game, buffer_t *buffer)
 {
     SDL_Rect rect = { 0, 0, GAME_SIZE, GAME_SIZE };
     SDL_RenderCopy(buffer->renderer, game->bullet_texture, NULL, &rect);
 }
 
 internal void
-render_cursor(game_t* game, buffer_t* buffer)
+render_cursor(game_t *game, buffer_t *buffer)
 {
     i32 mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);

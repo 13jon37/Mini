@@ -1,7 +1,7 @@
 #include "include/audio.h"
 
 internal bool
-load_audio(audio_t* audio)
+load_audio(audio_t *audio)
 {
     /* Load the WAV */
     if (!SDL_LoadWAV("Assets/Dungeon.wav", &audio->wav_spec, &audio->wav_buffer, &audio->wav_length))
@@ -30,7 +30,7 @@ load_audio(audio_t* audio)
 }
 
 internal void
-free_audio(audio_t* audio)
+free_audio(audio_t *audio)
 {
     SDL_CloseAudioDevice(audio->device_id);
     SDL_FreeWAV(audio->wav_buffer);
