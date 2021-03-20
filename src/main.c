@@ -90,7 +90,7 @@ set_windowed(buffer_t *buffer)
 }
 
 internal void
-process_events(game_t *game, game_input_t *input, buffer_t *buffer, SDL_Event *event)
+process_events(game_t *game, game_input_t *input, SDL_Event *event, buffer_t *buffer)
 {
     switch (event->type)
     {
@@ -113,6 +113,7 @@ process_events(game_t *game, game_input_t *input, buffer_t *buffer, SDL_Event *e
 
 internal bool
 initialize_game(game_t *game,
+                start_screen_t *start_screen,
                 buffer_t *buffer,
                 audio_t *audio)
 {
@@ -130,17 +131,22 @@ initialize_game(game_t *game,
     
     // Code to load custom cursor
     
-    /*SDL_ShowCursor(0);
+    /*
+SDL_ShowCursor(0);
     SDL_Surface* surface = IMG_Load("Assets/cursor.png");
     global_game.cursor_texture = SDL_CreateTextureFromSurface(global_buffer.renderer, surface);
     SDL_FreeSurface(surface);
     if (!global_game.cursor_texture)
-        return false;*/
+        return false;
+*/
     
     if (!load_audio(audio))
         return false;
     
     if (!load_fonts(&global_performance_data))
+        return false;
+    
+    if (!load_start_screen_font(start_screen, buffer))
         return false;
     
     if (!load_tiles(buffer, game))
@@ -192,19 +198,19 @@ int main(int argc, char *argv[])
     }
     
     buffer.renderer = SDL_CreateRenderer(buffer.window, 
-                                         -1,  // GPU thingy
+                                         -1,                        // GPU thingy
                                          SDL_RENDERER_ACCELERATED); // Flags
     game_t game = { 0 };
     start_screen_t start_screen = { 0 };
     
-    game.game_state.start_screen = true;
-    game.game_state.playing = false;
-    
     audio_t audio = { 0 };
     game_input_t input = { 0 };
     
-    if (!initialize_game(&game, &buffer, &audio))
+    if (!initialize_game(&game, &start_screen, &buffer, &audio))
         goto Exit;
+    
+    game.game_state.start_screen = true;
+    game.game_state.playing = false;
     
     SDL_Event event;
     bool running = true;
@@ -230,14 +236,18 @@ in order to use a controller */
         
         /* Main Game Simulation */
         {
-            process_events(&game, &input, &buffer, &event);
+            process_events(&game, &input, &event, &buffer);
             
             if (game.game_state.start_screen)
             {
                 render_start_screen(&start_screen, &buffer);
             }
             else if (game.game_state.playing)
-            {
+            { 
+                // Autistic asf but I don't want textures loaded I don't need
+                if (start_screen.font_texture != 0)
+                    destroy_start_screen_font_texture(&start_screen);
+                
                 render_buffer_to_screen(&game, &buffer); 
             }
         }
@@ -253,7 +263,6 @@ in order to use a controller */
         global_performance_data.frames_per_second = 1000.0 / (f32)(desired_delta - delta);
     }
     
-    
     Exit:
     SDL_GameControllerClose(input.game_controller);
     SDL_DestroyTexture(global_game.tiles.texture);
@@ -264,6 +273,7 @@ in order to use a controller */
     
     free_audio(&audio);
     
+    TTF_CloseFont(start_screen.start_screen_font);
     TTF_CloseFont(global_performance_data.fps_font);
     TTF_Quit();
     

@@ -85,47 +85,50 @@ poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
     bool pressed = false;
     
     /* Player Movement Code */
-    if (state[SDL_SCANCODE_W] | input->gamepad.up)
+    if (game->game_state.playing)
     {
-        game->player.y--;
-        pressed = true;
+        if (state[SDL_SCANCODE_W] | input->gamepad.up)
+        {
+            game->player.y--;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_UP;
+        }
         
-        game->player.direction_index = PLAYER_UP;
-    }
-    
-    if (state[SDL_SCANCODE_A] | input->gamepad.left)
-    {
-        game->player.x--;
-        pressed = true;
+        if (state[SDL_SCANCODE_A] | input->gamepad.left)
+        {
+            game->player.x--;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_LEFT;
+        }
         
-        game->player.direction_index = PLAYER_LEFT;
-    }
-    
-    if (state[SDL_SCANCODE_S] | input->gamepad.down)
-    {
-        game->player.y++;
-        pressed = true;
+        if (state[SDL_SCANCODE_S] | input->gamepad.down)
+        {
+            game->player.y++;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_DOWN;
+        }
         
-        game->player.direction_index = PLAYER_DOWN;
-    }
-    
-    if (state[SDL_SCANCODE_D] | input->gamepad.right)
-    {
-        game->player.x++;
-        pressed = true;
+        if (state[SDL_SCANCODE_D] | input->gamepad.right)
+        {
+            game->player.x++;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_RIGHT;
+        }
         
-        game->player.direction_index = PLAYER_RIGHT;
-    }
-    
-    // Controller Buttons
-    if (input->gamepad.a_button) {
-        printf("A button pressed.\n");
-    }
-    
-    if (state[SDL_SCANCODE_F] | input->gamepad.start)
-    {
-        game->game_state.start_screen = false;
-        game->game_state.playing = true;
+        /* Funnel Player Ability Code */
+        if (mouse_input(game, &m_event) | input->gamepad.a_button)
+            game->player.is_shooting = true;
+        else
+            game->player.is_shooting = false;
+        
+        // Controller Buttons
+        if (input->gamepad.a_button) {
+            printf("A button pressed.\n");
+        }
     }
     
     if (pressed)
@@ -133,11 +136,12 @@ poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
     else
         game->player.moving = false;
     
-    /* Funnel Player Ability Code */
-    if (mouse_input(game, &m_event) | input->gamepad.a_button)
-        game->player.is_shooting = true;
-    else
-        game->player.is_shooting = false;
+    /* Start Screen Input */
+    if (state[SDL_SCANCODE_F] | input->gamepad.start)
+    {
+        game->game_state.start_screen = false;
+        game->game_state.playing = true;
+    }
     
     pressed = !pressed;
 }

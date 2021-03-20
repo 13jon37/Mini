@@ -3,32 +3,17 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "player.h"
+
 #define GAME_TITLE   "Mini Gamer"
 #define GAME_SIZE    16         /* Game is 16 x 16 */
 #define GAME_WIDTH   512
 #define GAME_HEIGHT  288
 
-#define PLAYER_DOWN  0
-#define PLAYER_UP    1
-#define PLAYER_RIGHT 2
-#define PLAYER_LEFT  3
-
 typedef struct BUFFER_STRUCT {
     SDL_Window* window;
     SDL_Renderer* renderer;
 } buffer_t;
-
-typedef struct PLAYER_STRUCT {
-    u32 x, y;
-    u32 health;
-    f32 speed;
-    bool moving;
-    u8 direction_index;
-    SDL_Texture* sheet_texture;
-    SDL_Rect text_rect;
-    SDL_Rect player_render_rect;
-    bool is_shooting;
-} player_t;
 
 typedef struct TILE_STRUCT {
     u32 x, y;
@@ -55,7 +40,5 @@ typedef struct GAME_STRUCT {
     SDL_Texture* cursor_texture;
     SDL_Texture* bullet_texture;
 } game_t;
-
-
 
 #endif //GAME_H
