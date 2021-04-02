@@ -9,6 +9,7 @@
 #include "include/language_layer.h"
 #include "include/game.h"
 
+#include "video.c"
 #include "render.c"
 #include "start_screen.c"
 #include "audio.c"
@@ -16,7 +17,6 @@
 
 #include "player.c"
 
-global_variable game_t global_game;
 global_variable performance_t global_performance_data;
 
 internal void
@@ -41,56 +41,11 @@ render_buffer_to_screen(game_t *game, buffer_t *buffer)
     SDL_RenderPresent(buffer->renderer);
 }
 
-internal SDL_DisplayMode 
-get_screen_info(void)
-{
-    SDL_DisplayMode result = { 0 };
-    
-    if (SDL_GetDesktopDisplayMode(0, &result) != 0)
-    {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                 "Error",
-                                 "Failed to get displaymode.",
-                                 NULL);
-    }
-    
-    return result;
-}
-
 internal void
-set_fullscreen(buffer_t *buffer)
-{
-    SDL_DisplayMode info = get_screen_info();
-    
-    SDL_SetWindowSize(buffer->window, info.w, info.h);
-    
-    if (SDL_SetWindowFullscreen(buffer->window, SDL_WINDOW_FULLSCREEN) != 0) {
-        
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                 "Error",
-                                 "Failed to set window fullscreen.",
-                                 NULL);
-    }
-}
-
-internal void
-set_windowed(buffer_t *buffer) 
-{
-    SDL_DisplayMode info = get_screen_info();
-    
-    if (SDL_SetWindowFullscreen(buffer->window, 0) != 0) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
-                                 "Error",
-                                 "Failed to set screen to windowed mode.",
-                                 NULL);
-    }
-    
-    SDL_SetWindowSize(buffer->window, info.w - 80, info.h - 80);
-    SDL_SetWindowPosition(buffer->window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-}
-
-internal void
-process_events(game_t *game, game_input_t *input, SDL_Event *event, buffer_t *buffer)
+process_events(game_t *game,
+               game_input_t *input,
+               buffer_t *buffer,
+               SDL_Event *event)
 {
     switch (event->type)
     {
@@ -123,6 +78,8 @@ initialize_game(game_t *game,
         printf("Failed to set logical game res.\n");
         return false;
     }
+    
+    global_performance_data.is_fullscreen = true;
     
     if (global_performance_data.is_fullscreen)
         set_fullscreen(buffer);
@@ -210,7 +167,6 @@ int main(int argc, char *argv[])
         goto Exit;
     
     game.game_state.start_screen = true;
-    game.game_state.playing = false;
     
     SDL_Event event;
     bool running = true;
@@ -229,14 +185,11 @@ int main(int argc, char *argv[])
                 running = false;
         }
         
-        /* Always check for controller so, 
-you dont have to restart the game 
-in order to use a controller */
-        initialize_controller(&input);
+        initialize_controller(&input); // Always checks for a controller connection
         
         /* Main Game Simulation */
         {
-            process_events(&game, &input, &event, &buffer);
+            process_events(&game, &input, &buffer, &event);
             
             if (game.game_state.start_screen)
             {
@@ -245,7 +198,7 @@ in order to use a controller */
             else if (game.game_state.playing)
             { 
                 // Autistic asf but I don't want textures loaded I don't need
-                if (start_screen.font_texture != 0)
+                if (start_screen.font_texture)
                     destroy_start_screen_font_texture(&start_screen);
                 
                 render_buffer_to_screen(&game, &buffer); 
@@ -265,9 +218,9 @@ in order to use a controller */
     
     Exit:
     SDL_GameControllerClose(input.game_controller);
-    SDL_DestroyTexture(global_game.tiles.texture);
-    SDL_DestroyTexture(global_game.player.sheet_texture);
-    SDL_DestroyTexture(global_game.cursor_texture);
+    SDL_DestroyTexture(game.tiles.texture);
+    SDL_DestroyTexture(game.player.sheet_texture);
+    SDL_DestroyTexture(game.cursor_texture);
     SDL_DestroyRenderer(buffer.renderer);
     SDL_DestroyWindow(buffer.window);
     

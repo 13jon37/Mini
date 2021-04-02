@@ -11,13 +11,13 @@
 #define GAME_HEIGHT  288
 
 typedef struct BUFFER_STRUCT {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    SDL_Window *window;
+    SDL_Renderer *renderer;
 } buffer_t;
 
 typedef struct TILE_STRUCT {
     u32 x, y;
-    SDL_Texture* texture;
+    SDL_Texture *texture;
 } tile_t;
 
 typedef struct PERFORMANCE_DATA_STRUCT {
@@ -37,8 +37,8 @@ typedef struct GAME_STRUCT {
     game_state_t game_state;
     tile_t tiles;
     player_t player;
-    SDL_Texture* cursor_texture;
-    SDL_Texture* bullet_texture;
+    SDL_Texture *cursor_texture;
+    SDL_Texture *bullet_texture;
 } game_t;
 
 #endif //GAME_H

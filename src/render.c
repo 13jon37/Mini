@@ -28,7 +28,7 @@ render_fps_text(performance_t *perf, buffer_t *buffer, f32 fps)
     // Converts floating point number to string
     gcvt(fps, 2, fps_buf);
     
-    SDL_Surface* surface = TTF_RenderText_Solid(perf->fps_font, fps_buf, Red);
+    SDL_Surface *surface = TTF_RenderText_Solid(perf->fps_font, fps_buf, Red);
     perf->fps_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
@@ -41,7 +41,7 @@ render_fps_text(performance_t *perf, buffer_t *buffer, f32 fps)
 internal bool 
 load_tiles(buffer_t *buffer, game_t *game)
 {
-    SDL_Surface* surface = IMG_Load("Assets/grass.png");
+    SDL_Surface *surface = IMG_Load("Assets/grass.png");
     game->tiles.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
@@ -70,7 +70,7 @@ render_tiles(game_t *game, buffer_t *buffer)
 internal bool
 load_bullet(buffer_t *buffer, game_t *game)
 {
-    SDL_Surface* surface = IMG_Load("Assets/bullet.png");
+    SDL_Surface *surface = IMG_Load("Assets/bullet.png");
     game->bullet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
     SDL_FreeSurface(surface);
     
