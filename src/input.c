@@ -58,7 +58,7 @@ mouse_input(game_t *game, SDL_MouseButtonEvent *mouse_event)
         
         // If the mouse is down it is pressed
         if (mouse_event->type == SDL_MOUSEBUTTONDOWN)
-        {;
+        {
             printf("Pressed\n");
             return true;
         }
