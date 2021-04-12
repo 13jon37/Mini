@@ -43,3 +43,9 @@ render_enemy(buffer_t *buffer, enemy_t *enemy)
     SDL_RenderCopy(buffer->renderer, enemy->texture,
                    &enemy->enemy_render_rect, &rect);
 }
+
+internal void
+destroy_enemy(enemy_t *enemy)
+{
+    free(enemy);
+}
