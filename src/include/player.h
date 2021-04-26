@@ -1,13 +1,14 @@
-
 /* date = March 20th 2021 5:53 pm */
 
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#define PLAYER_DOWN  0
-#define PLAYER_UP    1
-#define PLAYER_RIGHT 2
-#define PLAYER_LEFT  3
+typedef enum PLAYER_DIRECTION_ENUM {
+    PLAYER_DOWN,
+    PLAYER_UP,
+    PLAYER_RIGHT,
+    PLAYER_LEFT
+} player_direction;
 
 typedef struct PLAYER_STRUCT {
     u32 x, y;

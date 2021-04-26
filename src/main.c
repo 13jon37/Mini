@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         goto Exit;
     }
     
-    buffer.renderer = SDL_CreateRenderer(buffer.window,
+    buffer.renderer = SDL_CreateRenderer(buffer.window,             // Window
                                          -1,                        // GPU thingy
                                          SDL_RENDERER_ACCELERATED); // Flags
     game_t game = { 0 };

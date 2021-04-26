@@ -22,13 +22,13 @@ typedef struct CONTROLLER_STRUCT {
 } controller_t;
 
 typedef struct GAME_INPUT_STRUCT {
-    SDL_GameController* game_controller;
+    SDL_GameController *game_controller;
     controller_t gamepad;
 } game_input_t;
 
-internal void initialize_controller(game_input_t* input);
-internal void controller_setup(game_input_t* input);
-internal bool mouse_input(game_t* game, SDL_MouseButtonEvent* mouse_event);
-internal void poll_input(game_t* game, game_input_t* input, SDL_MouseButtonEvent m_event);
+internal void initialize_controller(game_input_t *input);
+internal void controller_setup(game_input_t *input);
+internal bool mouse_input(game_t *game, SDL_MouseButtonEvent *mouse_event);
+internal void poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event);
 
 #endif //INPUT_H
