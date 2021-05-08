@@ -5,6 +5,17 @@
 #include "input.c"
 
 internal void
+mutable_objects(game_t *game, buffer_t *buffer)
+{
+    // Maybe have mutable objects in a seperate void function for simple organization
+    // since these objects will only exist temporarily
+    
+    // Idk what the fuck im doing objects confuse me
+    if (game->player.is_shooting)
+        render_bullet(game, buffer);
+}
+
+internal void
 render_buffer_to_screen(game_t *game, buffer_t *buffer)
 {
     SDL_RenderClear(buffer->renderer);
@@ -18,10 +29,9 @@ render_buffer_to_screen(game_t *game, buffer_t *buffer)
     
     render_enemy(buffer, &*global_enemy);
     
-    render_cursor(game, buffer);
+    mutable_objects(game, buffer);
     
-    if (game->player.is_shooting)
-        render_bullet(game, buffer);
+    render_cursor(game, buffer);
     
     render_fps_text(&global_performance_data, buffer, global_performance_data.frames_per_second);
     

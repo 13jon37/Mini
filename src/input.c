@@ -82,59 +82,7 @@ poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
     
     const u8 *state = SDL_GetKeyboardState(NULL);
     
-    bool pressed = false;
-    
-    /* Player Movement Code */
-    if (game->game_state.playing)
-    {
-        if (state[SDL_SCANCODE_W] | input->gamepad.up)
-        {
-            game->player.y--;
-            pressed = true;
-            
-            game->player.direction_index = PLAYER_UP;
-        }
-        
-        if (state[SDL_SCANCODE_A] | input->gamepad.left)
-        {
-            game->player.x--;
-            pressed = true;
-            
-            game->player.direction_index = PLAYER_LEFT;
-        }
-        
-        if (state[SDL_SCANCODE_S] | input->gamepad.down)
-        {
-            game->player.y++;
-            pressed = true;
-            
-            game->player.direction_index = PLAYER_DOWN;
-        }
-        
-        if (state[SDL_SCANCODE_D] | input->gamepad.right)
-        {
-            game->player.x++;
-            pressed = true;
-            
-            game->player.direction_index = PLAYER_RIGHT;
-        }
-        
-        /* Funnel Player Ability Code */
-        if (mouse_input(game, &m_event) | input->gamepad.a_button)
-            game->player.is_shooting = true;
-        else
-            game->player.is_shooting = false;
-        
-        // Controller Buttons
-        if (input->gamepad.a_button) {
-            printf("A button pressed.\n");
-        }
-    }
-    
-    if (pressed)
-        game->player.moving = true;
-    else
-        game->player.moving = false;
+    player_input(game, input, m_event);
     
     /* Start Screen Input */
     if (state[SDL_SCANCODE_F] | input->gamepad.start)
@@ -143,5 +91,4 @@ poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
         game->game_state.playing = true;
     }
     
-    pressed = !pressed;
 }

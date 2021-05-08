@@ -1,3 +1,5 @@
+#include "include/input.h"
+
 internal bool
 initialize_player(game_t *game, buffer_t *buffer)
 {
@@ -30,6 +32,68 @@ initialize_player(game_t *game, buffer_t *buffer)
                      &game->player.text_rect.h);
     
     return true;
+}
+
+internal void
+player_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
+{
+    bool pressed = false;
+    
+    const u8 *state = SDL_GetKeyboardState(NULL);
+    
+    /* Player Movement Code */
+    if (game->game_state.playing)
+    {
+        if (state[SDL_SCANCODE_W] | input->gamepad.up)
+        {
+            game->player.y--;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_UP;
+        }
+        
+        if (state[SDL_SCANCODE_A] | input->gamepad.left)
+        {
+            game->player.x--;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_LEFT;
+        }
+        
+        if (state[SDL_SCANCODE_S] | input->gamepad.down)
+        {
+            game->player.y++;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_DOWN;
+        }
+        
+        if (state[SDL_SCANCODE_D] | input->gamepad.right)
+        {
+            game->player.x++;
+            pressed = true;
+            
+            game->player.direction_index = PLAYER_RIGHT;
+        }
+        
+        /* Funnel Player Ability Code */
+        if (mouse_input(game, &m_event) | input->gamepad.a_button)
+            game->player.is_shooting = true;
+        else
+            game->player.is_shooting = false;
+        
+        // Controller Buttons
+        if (input->gamepad.a_button) {
+            printf("A button pressed.\n");
+        }
+    }
+    
+    if (pressed)
+        game->player.moving = true;
+    else
+        game->player.moving = false;
+    
+    pressed = !pressed;
 }
 
 internal void

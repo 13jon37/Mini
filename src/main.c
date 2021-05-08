@@ -17,6 +17,16 @@ global_variable enemy_t *global_enemy;
 
 #include "game.c"
 
+/* *************************
+Ideas to further this project:
+
+- Implement a tile map
+- Increase focus on gameplay functions rather than engine functions
+- Faction Selection Scene
+- 
+
+ ************************** */
+
 int main(int argc, char *argv[])
 {
     
