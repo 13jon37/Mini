@@ -9,11 +9,10 @@
 #include "include/language_layer.h"
 #include "include/game.h"
 
-#include "player.c"
 #include "enemy.c"
+#include "player.c"
 
 global_variable performance_t global_performance_data;
-global_variable enemy_t *global_enemy;
 
 #include "game.c"
 
@@ -111,6 +110,9 @@ int main(int argc, char *argv[])
             }
         }
         
+        if (global_performance_data.total_rendered_frames == 100)
+            destroy_enemy(&game.entities.enemy);
+        
         global_performance_data.total_rendered_frames++;
         f32 delta = SDL_GetTicks() - start_counter;
         if (delta < desired_delta)
@@ -125,13 +127,13 @@ int main(int argc, char *argv[])
     Exit:
     SDL_GameControllerClose(input.game_controller);
     SDL_DestroyTexture(game.tiles.texture);
-    SDL_DestroyTexture(game.player.sheet_texture);
+    SDL_DestroyTexture(game.entities.player.sheet_texture);
     SDL_DestroyTexture(game.cursor_texture);
     SDL_DestroyRenderer(buffer.renderer);
     SDL_DestroyWindow(buffer.window);
     
     free_audio(&audio);
-    destroy_enemy(global_enemy);
+    destroy_enemy(&game.entities.enemy);
     
     TTF_CloseFont(start_screen.start_screen_font);
     TTF_CloseFont(global_performance_data.fps_font);

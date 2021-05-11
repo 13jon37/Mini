@@ -1,4 +1,5 @@
 #include "include/enemy.h"
+
 #include <stdlib.h>
 
 internal enemy_t *
@@ -47,5 +48,5 @@ render_enemy(buffer_t *buffer, enemy_t *enemy)
 internal void
 destroy_enemy(enemy_t *enemy)
 {
-    free(enemy);
+    SDL_DestroyTexture(enemy->texture);
 }

@@ -82,7 +82,7 @@ poll_input(game_t *game, game_input_t *input, SDL_MouseButtonEvent m_event)
     
     const u8 *state = SDL_GetKeyboardState(NULL);
     
-    player_input(game, input, m_event);
+    player_input(&game->entities.player, game, input, m_event);
     
     /* Start Screen Input */
     if (state[SDL_SCANCODE_F] | input->gamepad.start)

@@ -11,7 +11,7 @@ mutable_objects(game_t *game, buffer_t *buffer)
     // since these objects will only exist temporarily
     
     // Idk what the fuck im doing objects confuse me
-    if (game->player.is_shooting)
+    if (game->entities.player.is_shooting)
         render_bullet(game, buffer);
 }
 
@@ -25,9 +25,9 @@ render_buffer_to_screen(game_t *game, buffer_t *buffer)
     
     render_tiles(game, buffer);
     
-    player_render(game, buffer);
+    player_render(&game->entities.player, buffer);
     
-    render_enemy(buffer, &*global_enemy);
+    render_enemy(buffer, &game->entities.enemy);
     
     mutable_objects(game, buffer);
     
@@ -109,13 +109,15 @@ SDL_ShowCursor(0);
     if (!load_bullet(buffer, game))
         return false;
     
-    if (!initialize_player(game, buffer))
+    if (!initialize_player(&game->entities.player, buffer))
     {
         printf("Failed to initialize player!\n");
         return false;
     }
     
-    if ((global_enemy = initialize_enemy(buffer)) == (enemy_t*)0)
+    game->entities.enemy = *initialize_enemy(buffer);
+    
+    if (&game->entities.enemy == (enemy_t*)0)
     {
         printf("Failed to initialize enemy!\n");
         return false;
