@@ -97,9 +97,7 @@ int main(int argc, char *argv[])
             process_events(&game, &input, &buffer, &event);
             
             if (game.game_state.start_screen)
-            {
                 render_start_screen(&start_screen, &buffer);
-            }
             else if (game.game_state.playing)
             {
                 // Autistic asf but I don't want textures loaded I don't need
@@ -110,15 +108,13 @@ int main(int argc, char *argv[])
             }
         }
         
-        if (global_performance_data.total_rendered_frames == 100)
+        if (global_performance_data.total_rendered_frames == 250)
             destroy_enemy(&game.entities.enemy);
         
         global_performance_data.total_rendered_frames++;
         f32 delta = SDL_GetTicks() - start_counter;
         if (delta < desired_delta)
-        {
             SDL_Delay(desired_delta - delta);
-        }
         
         // Convert m/s to fps
         global_performance_data.frames_per_second = 1000.0 / (f32)(desired_delta - delta);
@@ -129,11 +125,13 @@ int main(int argc, char *argv[])
     SDL_DestroyTexture(game.tiles.texture);
     SDL_DestroyTexture(game.entities.player.sheet_texture);
     SDL_DestroyTexture(game.cursor_texture);
+    
+    destroy_enemy(&game.entities.enemy);
+    
     SDL_DestroyRenderer(buffer.renderer);
     SDL_DestroyWindow(buffer.window);
     
     free_audio(&audio);
-    destroy_enemy(&game.entities.enemy);
     
     TTF_CloseFont(start_screen.start_screen_font);
     TTF_CloseFont(global_performance_data.fps_font);

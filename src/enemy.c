@@ -36,7 +36,7 @@ initialize_enemy(buffer_t *buffer)
 }
 
 internal void
-render_enemy(buffer_t *buffer, enemy_t *enemy)
+enemy_render(enemy_t *enemy ,buffer_t *buffer)
 {
     SDL_Rect rect = { enemy->x, enemy->y,
         enemy->text_rect.w / 3, enemy->text_rect.h / 4 };

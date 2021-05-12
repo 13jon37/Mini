@@ -39,7 +39,7 @@ render_fps_text(performance_t *perf, buffer_t *buffer, f32 fps)
 }
 
 internal bool 
-load_tiles(buffer_t *buffer, game_t *game)
+load_tiles(game_t *game, buffer_t *buffer)
 {
     SDL_Surface *surface = IMG_Load("Assets/grass.png");
     game->tiles.texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);
@@ -68,7 +68,7 @@ render_tiles(game_t *game, buffer_t *buffer)
 }
 
 internal bool
-load_bullet(buffer_t *buffer, game_t *game)
+load_bullet(game_t *game, buffer_t *buffer)
 {
     SDL_Surface *surface = IMG_Load("Assets/bullet.png");
     game->bullet_texture = SDL_CreateTextureFromSurface(buffer->renderer, surface);

@@ -16,7 +16,7 @@ typedef struct ENEMY_STRUCT {
 } enemy_t;
 
 internal enemy_t *initialize_enemy(buffer_t *buffer);
-internal void render_enemy(buffer_t *buffer, enemy_t *enemy);
+internal void enemy_render(enemy_t *enemy, buffer_t *buffer);
 internal void destroy_enemy(enemy_t *enemy);
 
 #endif // ENEMY_H

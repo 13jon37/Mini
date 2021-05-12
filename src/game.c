@@ -7,10 +7,10 @@
 internal void
 mutable_objects(game_t *game, buffer_t *buffer)
 {
-    // Maybe have mutable objects in a seperate void function for simple organization
-    // since these objects will only exist temporarily
+    // Maybe have "mutable" objects in a seperate void function for simple organization
+    // since these objects will only have short term existence in comaprison to others
     
-    // Idk what the fuck im doing objects confuse me
+    // Idk what the fuck im doing, i'm confused asf
     if (game->entities.player.is_shooting)
         render_bullet(game, buffer);
 }
@@ -27,7 +27,7 @@ render_buffer_to_screen(game_t *game, buffer_t *buffer)
     
     player_render(&game->entities.player, buffer);
     
-    render_enemy(buffer, &game->entities.enemy);
+    enemy_render(&game->entities.enemy, buffer);
     
     mutable_objects(game, buffer);
     
@@ -103,10 +103,10 @@ SDL_ShowCursor(0);
     if (!load_start_screen_font(start_screen, buffer))
         return false;
     
-    if (!load_tiles(buffer, game))
+    if (!load_tiles(game, buffer))
         return false;
     
-    if (!load_bullet(buffer, game))
+    if (!load_bullet(game, buffer))
         return false;
     
     if (!initialize_player(&game->entities.player, buffer))
