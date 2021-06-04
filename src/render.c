@@ -57,9 +57,9 @@ load_tiles(game_t *game, buffer_t *buffer)
 internal void
 render_tiles(game_t *game, buffer_t *buffer)
 {
-    for (u32 y = 0; y < GAME_HEIGHT; y+=GAME_SIZE)
+    for (u32 y = 0; y < game->render_res_h; y+=GAME_SIZE)
     {
-        for (u32 x = 0; x < GAME_WIDTH; x+=GAME_SIZE)
+        for (u32 x = 0; x < game->render_res_w; x+=GAME_SIZE)
         {
             SDL_Rect rect = { x, y, GAME_SIZE, GAME_SIZE };
             SDL_RenderCopy(buffer->renderer, game->tiles.texture, NULL, &rect);

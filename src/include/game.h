@@ -39,6 +39,8 @@ typedef struct GAME_STRUCT {
     entities_t entities;
     SDL_Texture *cursor_texture;
     SDL_Texture *bullet_texture;
+    u32 render_res_w;
+    u32 render_res_h;
 } game_t;
 
 #endif //GAME_H

@@ -24,7 +24,7 @@ Ideas to further this project:
 - Faction Selection Scene
 - 
 
- ************************** */
+ *************************** */
 
 int main(int argc, char *argv[])
 {
@@ -62,9 +62,37 @@ int main(int argc, char *argv[])
     buffer.renderer = SDL_CreateRenderer(buffer.window,             // Window
                                          -1,                        // GPU thingy
                                          SDL_RENDERER_ACCELERATED); // Flags
-    game_t game = { 0 };
-    start_screen_t start_screen = { 0 };
     
+    game_t game = { 0 };
+    
+    // Check for monitor width so if the res is over 1920 we can scale 
+    // the game up in order for it to look better
+    if (display_mode_info.w > 1920)
+    {
+        game.render_res_w = GAME_WIDTH * 5;
+        game.render_res_h = GAME_HEIGHT * 5;
+    }
+    else
+    {
+        game.render_res_w = GAME_WIDTH;
+        game.render_res_h = GAME_HEIGHT;
+    }
+    
+    // Set logical render -- basically set buffer render res
+    if (SDL_RenderSetLogicalSize(buffer.renderer, game.render_res_w, game.render_res_h) != 0)
+    {
+        printf("Failed to set logical game res.\n");
+        goto Exit;
+    }
+    
+    global_performance_data.is_fullscreen = true;
+    
+    if (global_performance_data.is_fullscreen)
+        set_fullscreen(&buffer);
+    else
+        set_windowed(&buffer);
+    
+    start_screen_t start_screen = { 0 };
     audio_t audio = { 0 };
     game_input_t input = { 0 };
     
@@ -122,16 +150,16 @@ int main(int argc, char *argv[])
     
     Exit:
     SDL_GameControllerClose(input.game_controller);
+    
     SDL_DestroyTexture(game.tiles.texture);
     SDL_DestroyTexture(game.entities.player.sheet_texture);
     SDL_DestroyTexture(game.cursor_texture);
     
     destroy_enemy(&game.entities.enemy);
+    free_audio(&audio);
     
     SDL_DestroyRenderer(buffer.renderer);
     SDL_DestroyWindow(buffer.window);
-    
-    free_audio(&audio);
     
     TTF_CloseFont(start_screen.start_screen_font);
     TTF_CloseFont(global_performance_data.fps_font);

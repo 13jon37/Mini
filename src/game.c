@@ -69,20 +69,6 @@ initialize_game(game_t *game,
                 buffer_t *buffer,
                 audio_t *audio)
 {
-    // Set logical render -- basically set buffer render res
-    if (SDL_RenderSetLogicalSize(buffer->renderer, GAME_WIDTH, GAME_HEIGHT) != 0)
-    {
-        printf("Failed to set logical game res.\n");
-        return false;
-    }
-    
-    global_performance_data.is_fullscreen = true;
-    
-    if (global_performance_data.is_fullscreen)
-        set_fullscreen(buffer);
-    else
-        set_windowed(buffer);
-    
     // Code to load custom cursor
     
     /*
