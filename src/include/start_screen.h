@@ -11,7 +11,7 @@ typedef struct START_SCREEN_STRUCT {
 } start_screen_t;
 
 internal bool load_start_screen_font(start_screen_t *s, buffer_t *buffer);
-internal void render_start_screen_text(start_screen_t *s, buffer_t *buffer);
-internal void render_start_screen(start_screen_t *s, buffer_t *buffer);
+internal void render_start_screen_text(start_screen_t *s, game_t *game, buffer_t *buffer);
+internal void render_start_screen(start_screen_t *s, game_t *game, buffer_t *buffer);
 
 #endif //START_SCREEN_H

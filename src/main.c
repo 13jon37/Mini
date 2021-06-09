@@ -65,12 +65,16 @@ int main(int argc, char *argv[])
     
     game_t game = { 0 };
     
+    // NOTE(Jon): messy asf and temporary most likely
+    
     // Check for monitor width so if the res is over 1920 we can scale 
     // the game up in order for it to look better
-    if (display_mode_info.w > 1920)
+    if (display_mode_info.w == 1920)
     {
-        game.render_res_w = GAME_WIDTH * 5;
-        game.render_res_h = GAME_HEIGHT * 5;
+        //game.render_res_w = 640; // test values
+        //game.render_res_h = 360;
+        game.render_res_w = 384; // test values
+        game.render_res_h = 216;
     }
     else
     {
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
             process_events(&game, &input, &buffer, &event);
             
             if (game.game_state.start_screen)
-                render_start_screen(&start_screen, &buffer);
+                render_start_screen(&start_screen, &game, &buffer);
             else if (game.game_state.playing)
             {
                 // Autistic asf but I don't want textures loaded I don't need

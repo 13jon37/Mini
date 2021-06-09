@@ -95,7 +95,7 @@ SDL_ShowCursor(0);
     if (!load_bullet(game, buffer))
         return false;
     
-    if (!initialize_player(&game->entities.player, buffer))
+    if (!initialize_player(&game->entities.player, game, buffer))
     {
         printf("Failed to initialize player!\n");
         return false;

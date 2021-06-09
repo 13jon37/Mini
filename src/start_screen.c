@@ -23,21 +23,21 @@ load_start_screen_font(start_screen_t *s, buffer_t *buffer)
 }
 
 internal void 
-render_start_screen_text(start_screen_t *s, buffer_t *buffer)
+render_start_screen_text(start_screen_t *s, game_t *game, buffer_t *buffer)
 {
-    SDL_Rect rect = { GAME_WIDTH / 2 - 64, GAME_HEIGHT / 2 - 16, 128, 32 };
+    SDL_Rect rect = { game->render_res_w / 2 - 64, game->render_res_h / 2 - 16, 128, 32 };
     SDL_RenderCopy(buffer->renderer, s->font_texture, NULL, &rect);
 }
 
 internal void 
-render_start_screen(start_screen_t *s, buffer_t *buffer)
+render_start_screen(start_screen_t *s, game_t *game, buffer_t *buffer)
 {
     SDL_RenderClear(buffer->renderer);
     
     // Insert Objects to Render
     SDL_SetRenderDrawColor(buffer->renderer, 0, 0, 0, 255);
     
-    render_start_screen_text(s, buffer);
+    render_start_screen_text(s, game, buffer);
     
     SDL_RenderPresent(buffer->renderer);
 }

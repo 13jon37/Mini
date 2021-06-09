@@ -1,10 +1,10 @@
 #include "include/input.h"
 
 internal bool
-initialize_player(player_t *player, buffer_t *buffer)
+initialize_player(player_t *player, game_t *game, buffer_t *buffer)
 {
-    player->x = (GAME_WIDTH / 2) - GAME_SIZE;
-    player->y = (GAME_HEIGHT / 2) - GAME_SIZE;
+    player->x = (game->render_res_w / 2) - GAME_SIZE;
+    player->y = (game->render_res_h / 2) - GAME_SIZE;
     player->health = 100;
     player->moving = false;
     player->direction_index = 0;
